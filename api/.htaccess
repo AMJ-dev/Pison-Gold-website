@@ -1,0 +1,46 @@
+RewriteEngine On
+
+#RewriteCond %{HTTPS} off
+#RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+ 
+Options -Indexes
+
+RewriteCond %{REQUEST_URI} /+[^\.]+$ 
+RewriteRule ^(.+[^/])$ %{REQUEST_URI}/ [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteRule ^sign-in/$ src/auth/sign-in.php [NC]
+RewriteRule ^verify-otp/$ src/auth/otp.php [NC]
+RewriteRule ^send-otp/$ src/auth/send-otp.php [NC]
+RewriteRule ^check-link/$ src/auth/check-link.php [NC]
+RewriteRule ^check-password-link/$ src/auth/check-password-link.php [NC]
+RewriteRule ^resend-otp/$ src/auth/resend-otp.php [NC]
+RewriteRule ^reset-password/$ src/auth/reset-password.php [NC]
+RewriteRule ^contact-us/$ src/auth/contact-us.php [NC]
+
+RewriteRule ^add-team/$ src/teams/add.php [NC]
+RewriteRule ^update-team/$ src/teams/update.php [NC]
+RewriteRule ^get-teams/$ src/teams/get.php [NC]
+RewriteRule ^get-team/([0-9]+)/$ src/teams/get.php?id=$1 [NC]
+RewriteRule ^delete-team/$ src/teams/delete.php [NC]
+
+RewriteRule ^add-project/$ src/projects/add.php [NC]
+RewriteRule ^update-project/$ src/projects/update.php [NC]
+RewriteRule ^get-projects/$ src/projects/get.php [NC]
+RewriteRule ^get-project/([0-9]+)/$ src/projects/get.php?id=$1 [NC]
+RewriteRule ^delete-project/$ src/projects/delete.php [NC]
+RewriteRule ^delete-project-image/$ src/projects/delete-image.php [NC]
+RewriteRule ^get-project/([0-9]+)/$ src/projects/single.php?id=$1 [NC]
+
+RewriteRule ^add-testimony/$ src/testimonies/add.php [NC]
+RewriteRule ^update-testimony/$ src/testimonies/update.php [NC]
+RewriteRule ^get-testimonies/$ src/testimonies/get.php [NC]
+RewriteRule ^get-testimony/([0-9]+)/$ src/testimonies/get.php?id=$1 [NC]
+RewriteRule ^delete-testimony/$ src/testimonies/delete.php [NC]
+
+RewriteRule ^get-dashboard/$ src/get-dashboard.php [NC]
+RewriteRule ^get-profile/$ src/get-profile.php [NC]
+
+# RewriteRule ^delete-challenge/([0-9]+)/$ src/admin/delete-challenge.php?id=$1 [NC]
