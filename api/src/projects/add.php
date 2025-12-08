@@ -16,9 +16,22 @@ try {
     $challenges  = trim($_POST["challenges"] ?? "");
     $solution    = trim($_POST["solution"] ?? "");
     $impact      = trim($_POST["impact"] ?? "");
+    
+    // New fields
+    $duration    = trim($_POST["duration"] ?? "");
+    $budget      = trim($_POST["budget"] ?? "");
+    $team_size   = trim($_POST["team_size"] ?? "");
+    $location    = trim($_POST["location"] ?? "");
+    $key_results = trim($_POST["key_results"] ?? "");
+    $sector      = trim($_POST["sector"] ?? "");
 
-    if ($title === "" || $long_desc === "") {
-        echo json_encode(["error" => true, "data" => "Title and description are required"]);
+    if ($title === "" || $short_desc === "") {
+        echo json_encode(["error" => true, "data" => "Title and short description are required"]);
+        exit;
+    }
+
+    if (strlen($short_desc) > 200) {
+        echo json_encode(["error" => true, "data" => "Short description must be less than 200 characters"]);
         exit;
     }
 
@@ -33,10 +46,17 @@ try {
         $cover_image = $upload["path"];
     }
 
-    // Insert project
+    // Insert project with new fields
     $stmt = $conn->prepare("
-        INSERT INTO projects (title, long_desc, short_desc, challenges, solution, impact, cover_image, created_at)
-        VALUES (:title, :long_desc, :short_desc, :challenges, :solution, :impact, :cover_image, :created_at)
+        INSERT INTO projects (
+            title, long_desc, short_desc, challenges, solution, impact,
+            duration, budget, team_size, location, key_results, sector,
+            cover_image, created_at
+        ) VALUES (
+            :title, :long_desc, :short_desc, :challenges, :solution, :impact,
+            :duration, :budget, :team_size, :location, :key_results, :sector,
+            :cover_image, :created_at
+        )
     ");
 
     $stmt->bindValue(":title", $title);
@@ -45,6 +65,15 @@ try {
     $stmt->bindValue(":challenges", $challenges);
     $stmt->bindValue(":solution", $solution);
     $stmt->bindValue(":impact", $impact);
+    
+    // Bind new fields
+    $stmt->bindValue(":duration", $duration);
+    $stmt->bindValue(":budget", $budget);
+    $stmt->bindValue(":team_size", $team_size);
+    $stmt->bindValue(":location", $location);
+    $stmt->bindValue(":key_results", $key_results);
+    $stmt->bindValue(":sector", $sector);
+    
     $stmt->bindValue(":cover_image", $cover_image);
     $stmt->bindValue(":created_at", date("Y-m-d H:i:s"));
 

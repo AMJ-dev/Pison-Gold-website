@@ -29,9 +29,22 @@ try {
     $challenges  = trim($_POST["challenges"] ?? "");
     $solution    = trim($_POST["solution"] ?? "");
     $impact      = trim($_POST["impact"] ?? "");
+    
+    // New fields
+    $duration    = trim($_POST["duration"] ?? "");
+    $budget      = trim($_POST["budget"] ?? "");
+    $team_size   = trim($_POST["team_size"] ?? "");
+    $location    = trim($_POST["location"] ?? "");
+    $key_results = trim($_POST["key_results"] ?? "");
+    $sector      = trim($_POST["sector"] ?? "");
 
-    if ($title === "") {
-        echo json_encode(["error" => true, "data" => "Title is required"]);
+    if ($title === "" || $short_desc === "") {
+        echo json_encode(["error" => true, "data" => "Title and short description are required"]);
+        exit;
+    }
+
+    if (strlen($short_desc) > 200) {
+        echo json_encode(["error" => true, "data" => "Short description must be less than 200 characters"]);
         exit;
     }
 
@@ -56,7 +69,14 @@ try {
             challenges = :challenges,
             solution = :solution,
             impact = :impact,
-            cover_image = :cover
+            duration = :duration,
+            budget = :budget,
+            team_size = :team_size,
+            location = :location,
+            key_results = :key_results,
+            sector = :sector,
+            cover_image = :cover,
+            updated_at = :updated_at
         WHERE id = :id
     ");
 
@@ -67,27 +87,39 @@ try {
         ":challenges"  => $challenges,
         ":solution"    => $solution,
         ":impact"      => $impact,
+        ":duration"    => $duration,
+        ":budget"      => $budget,
+        ":team_size"   => $team_size,
+        ":location"    => $location,
+        ":key_results" => $key_results,
+        ":sector"      => $sector,
         ":cover"       => $cover_path,
+        ":updated_at"  => date("Y-m-d H:i:s"),
         ":id"          => $id
     ]);
 
-    if (isset($_FILES["gallery_images"])) {
-        foreach ($_FILES["gallery_images"]["name"] as $index => $filename) {
+    // Handle gallery images (note: field name should be "gallery" to match frontend)
+    if (!empty($_FILES["gallery"])) {
+        foreach ($_FILES["gallery"]["name"] as $index => $filename) {
             if (!$filename) continue;
 
             $file = [
-                "name"     => $_FILES["gallery_images"]["name"][$index],
-                "type"     => $_FILES["gallery_images"]["type"][$index],
-                "tmp_name" => $_FILES["gallery_images"]["tmp_name"][$index],
-                "error"    => $_FILES["gallery_images"]["error"][$index],
-                "size"     => $_FILES["gallery_images"]["size"][$index]
+                "name"     => $_FILES["gallery"]["name"][$index],
+                "type"     => $_FILES["gallery"]["type"][$index],
+                "tmp_name" => $_FILES["gallery"]["tmp_name"][$index],
+                "error"    => $_FILES["gallery"]["error"][$index],
+                "size"     => $_FILES["gallery"]["size"][$index]
             ];
 
             $up2 = upload_pics($file);
             if ($up2["error"]) continue; 
 
-            $addImg = $conn->prepare("INSERT INTO project_gallery (project_id, image) VALUES (:pid, :img)");
-            $addImg->execute([":pid" => $id, ":img" => $up2["path"]]);
+            $addImg = $conn->prepare("INSERT INTO project_gallery (project_id, image, created_at) VALUES (:pid, :img, :created_at)");
+            $addImg->execute([
+                ":pid" => $id, 
+                ":img" => $up2["path"],
+                ":created_at" => date("Y-m-d H:i:s")
+            ]);
         }
     }
 

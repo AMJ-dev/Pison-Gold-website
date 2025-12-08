@@ -1,104 +1,138 @@
 <?php
-require_once dirname(__DIR__, 2) . "/include/verify-token.php";
+require_once dirname(__DIR__, 2) . "/include/set-header.php";
 
 $error = true;
 $data  = "Invalid request";
 
 try {
-    if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-        echo json_encode(["error" => true, "data" => "Invalid request method"]);
+    if (!isset($_GET["id"]) || !is_numeric($_GET["id"])) {
+        echo json_encode(["error" => true, "data" => "Invalid project ID"]);
         exit;
     }
 
-    $title       = trim($_POST["title"] ?? "");
-    $description = trim($_POST["description"] ?? "");
-    $challenges  = trim($_POST["challenges"] ?? "");
-    $solution    = trim($_POST["solution"] ?? "");
-    $impact      = trim($_POST["impact"] ?? "");
+    $id = (int) $_GET["id"];
 
-    if ($title === "" || $description === "") {
-        echo json_encode(["error" => true, "data" => "Title and description are required"]);
-        exit;
-    }
-
-    // Upload main cover image (optional)
-    $cover_image = null;
-    if (!empty($_FILES["cover_image"]["name"])) {
-        $upload = upload_pics($_FILES["cover_image"]);
-        if ($upload["error"]) {
-            echo json_encode(["error" => true, "data" => $upload["message"]]);
-            exit;
-        }
-        $cover_image = $upload["path"];
-    }
-
-    // Insert project
+    // Get the main project
     $stmt = $conn->prepare("
-        INSERT INTO projects (title, description, challenges, solution, impact, cover_image, created_at)
-        VALUES (:title, :description, :challenges, :solution, :impact, :cover_image, :created_at)
+        SELECT 
+            id, title, short_desc, long_desc, challenges, solution, impact,
+            duration, budget, team_size, location, key_results, sector,
+            cover_image, created_at, updated_at
+        FROM projects 
+        WHERE id = :id 
+        LIMIT 1
     ");
+    $stmt->execute([":id" => $id]);
 
-    $stmt->bindValue(":title", $title);
-    $stmt->bindValue(":description", $description);
-    $stmt->bindValue(":challenges", $challenges);
-    $stmt->bindValue(":solution", $solution);
-    $stmt->bindValue(":impact", $impact);
-    $stmt->bindValue(":cover_image", $cover_image);
-    $stmt->bindValue(":created_at", date("Y-m-d H:i:s"));
-
-    if (!$stmt->execute()) {
-        echo json_encode(["error" => true, "data" => "Failed to add project"]);
+    if ($stmt->rowCount() === 0) {
+        echo json_encode(["error" => true, "data" => "Project not found"]);
         exit;
     }
 
-    $project_id = $conn->lastInsertId();
+    $project = $stmt->fetch(PDO::FETCH_OBJ);
 
-    // Handle gallery images
-    if (!empty($_FILES["gallery"])) {
-        foreach ($_FILES["gallery"]["name"] as $i => $name) {
+    // Get gallery images
+    $gallery_stmt = $conn->prepare("
+        SELECT id, image 
+        FROM project_gallery 
+        WHERE project_id = :project_id 
+        ORDER BY created_at DESC
+    ");
+    $gallery_stmt->execute([":project_id" => $id]);
+    $gallery = $gallery_stmt->fetchAll(PDO::FETCH_OBJ);
 
-            if ($name === "") continue;
+    $project->gallery = $gallery;
 
-            $file = [
-                "name"     => $_FILES["gallery"]["name"][$i],
-                "type"     => $_FILES["gallery"]["type"][$i],
-                "tmp_name" => $_FILES["gallery"]["tmp_name"][$i],
-                "error"    => $_FILES["gallery"]["error"][$i],
-                "size"     => $_FILES["gallery"]["size"][$i],
-            ];
+    // Get similar projects (same sector, excluding current project)
+    $similar_stmt = $conn->prepare("
+        SELECT 
+            id, title, short_desc, cover_image, duration, team_size, location, sector,
+            created_at
+        FROM projects 
+        WHERE sector = :sector 
+          AND id != :id
+          AND cover_image IS NOT NULL 
+          AND cover_image != ''
+        ORDER BY created_at DESC 
+        LIMIT 3
+    ");
+    $similar_stmt->execute([
+        ":sector" => $project->sector,
+        ":id" => $id
+    ]);
+    $similar_projects = $similar_stmt->fetchAll(PDO::FETCH_OBJ);
 
-            $upload = upload_pics($file);
-
-            if ($upload["error"]) {
-                // If one fails, continue but report it
-                continue;
-            }
-
-            $img = $upload["path"];
-
-            $g = $conn->prepare("
-                INSERT INTO project_gallery (project_id, image, created_at)
-                VALUES (:project_id, :image, :created_at)
-            ");
-            $g->execute([
-                ":project_id" => $project_id,
-                ":image"      => $img,
-                ":created_at" => date("Y-m-d H:i:s")
-            ]);
-        }
+    // If less than 3 similar projects in same sector, get other recent projects
+    if (count($similar_projects) < 3) {
+        $limit = 3 - count($similar_projects);
+        $other_stmt = $conn->prepare("
+            SELECT 
+                id, title, short_desc, cover_image, duration, team_size, location, sector,
+                created_at
+            FROM projects 
+            WHERE sector != :sector 
+              AND id != :id
+              AND cover_image IS NOT NULL 
+              AND cover_image != ''
+            ORDER BY created_at DESC 
+            LIMIT :limit
+        ");
+        $other_stmt->bindValue(":sector", $project->sector, PDO::PARAM_STR);
+        $other_stmt->bindValue(":id", $id, PDO::PARAM_INT);
+        $other_stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
+        $other_stmt->execute();
+        
+        $other_projects = $other_stmt->fetchAll(PDO::FETCH_OBJ);
+        $similar_projects = array_merge($similar_projects, $other_projects);
     }
 
-    echo json_encode([
+    // If still less than 3, get latest projects
+    if (count($similar_projects) < 3) {
+        $limit = 3 - count($similar_projects);
+        $latest_stmt = $conn->prepare("
+            SELECT 
+                id, title, short_desc, cover_image, duration, team_size, location, sector,
+                created_at
+            FROM projects 
+            WHERE id != :id
+              AND cover_image IS NOT NULL 
+              AND cover_image != ''
+            ORDER BY created_at DESC 
+            LIMIT :limit
+        ");
+        $latest_stmt->bindValue(":id", $id, PDO::PARAM_INT);
+        $latest_stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
+        $latest_stmt->execute();
+        
+        $latest_projects = $latest_stmt->fetchAll(PDO::FETCH_OBJ);
+        $similar_projects = array_merge($similar_projects, $latest_projects);
+    }
+
+    // Get project statistics
+    $stats_stmt = $conn->prepare("
+        SELECT 
+            COUNT(*) as total_projects,
+            COUNT(DISTINCT sector) as sectors_covered,
+            SUM(CASE WHEN duration LIKE '%Months%' OR duration LIKE '%Years%' THEN 1 ELSE 0 END) as completed_projects,
+            (SELECT COUNT(DISTINCT location) FROM projects WHERE location IS NOT NULL AND location != '') as locations_covered
+        FROM projects
+    ");
+    $stats_stmt->execute();
+    $stats = $stats_stmt->fetch(PDO::FETCH_OBJ);
+
+    $response = [
         "error" => false,
-        "data"  => "Project added successfully",
-        "project_id" => $project_id
-    ]);
+        "data" => [
+            "project" => $project,
+            "similar_projects" => $similar_projects,
+            "stats" => $stats
+        ]
+    ];
+
+    echo json_encode($response);
     exit;
 
 } catch (Throwable $th) {
-    echo json_encode([
-        "error" => true,
-        "data" => "Server Error: " . $th->getMessage()
-    ]);
+    echo json_encode(["error" => true, "data" => "Server Error: " . $th->getMessage()]);
     exit;
 }

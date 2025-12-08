@@ -1,5 +1,5 @@
 <?php
-    require_once dirname(__DIR__, 2) . "/include/verify-token.php";
+    require_once dirname(__DIR__, 2) . "/include/set-header.php";
 
     try {
         $id = isset($_GET["id"]) ? intval($_GET["id"]) : 0;

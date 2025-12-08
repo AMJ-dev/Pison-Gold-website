@@ -1,5 +1,5 @@
 <?php
-    require_once dirname(__DIR__, 2) . "/include/verify-token.php";
+    require_once dirname(__DIR__, 2) . "/include/set-header.php";
     try {
         $projects_stmt = $conn->prepare("SELECT * FROM projects ORDER BY id DESC");
         $projects_stmt->execute();
