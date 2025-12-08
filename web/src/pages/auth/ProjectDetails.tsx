@@ -158,8 +158,9 @@ const ProjectDetails = () => {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
-      {/* Hero Section - Background Only */}
-      <section className="relative h-[60vh] min-h-[500px] overflow-hidden">
+      {/* Hero Section with Parallax - Background Only */}
+      <section className="relative h-[70vh] min-h-[500px] overflow-hidden">
+        {/* Background with gradient overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-fixed"
           style={{ 
@@ -167,107 +168,74 @@ const ProjectDetails = () => {
             backgroundAttachment: 'fixed'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
         
-        {/* Back button */}
-        <div className="absolute top-8 left-8 z-20">
-          <button
-            onClick={() => navigate("/projects")}
-            className="group inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/20 backdrop-blur-sm px-4 py-2 rounded-xl"
-          >
-            <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span>Back to Projects</span>
-          </button>
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-accent/10 to-gold/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-navy/20 to-transparent rounded-full blur-3xl" />
+        </div>
+
+        {/* Content - Only back button */}
+        <div className="absolute inset-0 flex items-start">
+          <div className="container-custom pt-20">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              {/* Back button */}
+              <button
+                onClick={() => navigate("/projects")}
+                className="group inline-flex items-center gap-2 text-white/80 hover:text-white bg-black/20 backdrop-blur-sm px-4 py-2 rounded-xl transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                <span>Back to Projects</span>
+              </button>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-gold rounded-full mt-2 animate-pulse" />
+          </div>
         </div>
       </section>
 
-      {/* Title & Description Section - Immediately After Hero */}
-      <section className="py-16 -mt-20 relative z-10">
+      {/* Stats Section */}
+      <section className="py-16 bg-gradient-to-b from-background to-navy-dark/5">
         <div className="container-custom">
-          <div className="max-w-5xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="bg-card/80 backdrop-blur-lg rounded-3xl border border-border/50 shadow-2xl p-8 md:p-12"
-            >
-              {/* Project badge */}
-              <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-accent/10 backdrop-blur-sm rounded-full border border-accent/20 mb-8">
-                <SectorIcon className="w-4 h-4 text-accent" />
-                <span className="text-sm font-medium text-accent uppercase tracking-wider">
-                  {project.sector || "Featured Project"}
-                </span>
-              </div>
-
-              {/* Title */}
-              <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6">
-                {project.title}
-              </h1>
-
-              {/* Short description */}
-              {project.short_desc && (
-                <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-                  {project.short_desc}
-                </p>
-              )}
-
-              {/* Project metadata */}
-              <div className="flex flex-wrap gap-6 mb-8">
-                {project.location && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="w-5 h-5" />
-                    <span>{project.location}</span>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={{
+              visible: { transition: { staggerChildren: 0.1 } }
+            }}
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+          >
+            {statsData.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group bg-card/50 backdrop-blur-sm p-8 rounded-3xl border border-border/50 hover:border-accent/30 transition-all duration-300"
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className={`w-16 h-16 rounded-2xl ${stat.color.replace('text-', 'bg-')}/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className={`w-8 h-8 ${stat.color}`} />
+                    </div>
+                    <div className="text-3xl font-heading font-bold mb-2">{stat.value}</div>
+                    <div className="text-muted-foreground font-medium">{stat.label}</div>
                   </div>
-                )}
-                {project.created_at && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="w-5 h-5" />
-                    <span>{new Date(project.created_at).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long',
-                      day: 'numeric'
-                    })}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* CTAs */}
-              <div className="flex flex-wrap gap-4 mb-10">
-                <a href="#timeline" className="group inline-flex items-center gap-3 bg-gradient-to-r from-accent to-gold-dark text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
-                  <span>Explore Journey</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </a>
-                <Link to="/contact" className="group inline-flex items-center gap-3 border-2 border-accent/30 text-accent px-6 py-3 rounded-xl font-medium hover:bg-accent/5 transition-all duration-300">
-                  <span>Start Similar Project</span>
-                  <Zap className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </Link>
-              </div>
-
-              {/* Stats inline */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 pt-10 border-t border-border/30">
-                {statsData.map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <motion.div
-                      key={stat.label}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="text-center group"
-                    >
-                      <div className="text-2xl font-heading font-bold text-accent mb-1 group-hover:scale-105 transition-transform">
-                        {stat.value}
-                      </div>
-                      <div className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-                        <Icon className={`w-4 h-4 ${stat.color}`} />
-                        {stat.label}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
         </div>
       </section>
 
@@ -277,6 +245,61 @@ const ProjectDetails = () => {
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-20">
+              {/* Project Overview Section - OPTION 2 */}
+              <div className="bg-card/50 backdrop-blur-sm rounded-3xl border border-border/50 p-8 md:p-10">
+                {/* Project badge */}
+                <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-accent/10 backdrop-blur-sm rounded-full border border-accent/20 mb-8">
+                  <SectorIcon className="w-4 h-4 text-accent" />
+                  <span className="text-sm font-medium text-accent uppercase tracking-wider">
+                    {project.sector || "Featured Project"}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6">
+                  {project.title}
+                </h1>
+
+                {/* Short description */}
+                {project.short_desc && (
+                  <p className="text-xl text-muted-foreground leading-relaxed mb-8">
+                    {project.short_desc}
+                  </p>
+                )}
+
+                {/* Project metadata */}
+                <div className="flex flex-wrap gap-6 mb-8">
+                  {project.location && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="w-5 h-5" />
+                      <span>{project.location}</span>
+                    </div>
+                  )}
+                  {project.created_at && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="w-5 h-5" />
+                      <span>{new Date(project.created_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long',
+                        day: 'numeric'
+                      })}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* CTAs */}
+                <div className="flex flex-wrap gap-4 mb-10">
+                  <a href="#timeline" className="group inline-flex items-center gap-3 bg-gradient-to-r from-accent to-gold-dark text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
+                    <span>Explore Journey</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </a>
+                  <Link to="/contact" className="group inline-flex items-center gap-3 border-2 border-accent/30 text-accent px-6 py-3 rounded-xl font-medium hover:bg-accent/5 transition-all duration-300">
+                    <span>Start Similar Project</span>
+                    <Zap className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+
               {/* Project Story */}
               <div>
                 <div className="flex items-center gap-4 mb-10">
