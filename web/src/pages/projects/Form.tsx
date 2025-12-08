@@ -25,7 +25,16 @@ import {
   Calendar,
   Users,
   Clock,
-  MapPin
+  MapPin,
+  Plus,
+  DollarSign,
+  Building2,
+  CalendarDays,
+  Target as TargetIcon,
+  TrendingUp,
+  Briefcase,
+  Layers,
+  Timer
 } from "lucide-react";
 import { resolveSrc } from "@/lib/functions";
 import Header from "@/components/Header";
@@ -47,6 +56,12 @@ interface Project {
   impact: string;
   cover_image: string | null;
   gallery: GalleryItem[];
+  duration: string;
+  budget: string;
+  team_size: string;
+  location: string;
+  key_results: string[];
+  sector: string;
 }
 
 const Form = () => {
@@ -65,6 +80,12 @@ const Form = () => {
     impact: "",
     cover_image: null,
     gallery: [],
+    duration: "",
+    budget: "",
+    team_size: "",
+    location: "",
+    key_results: [""],
+    sector: ""
   });
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -82,6 +103,32 @@ const Form = () => {
     solution: 0,
     impact: 0,
   });
+
+  const sectors = [
+    "Real Estate & Hospitality",
+    "Healthcare Advancement",
+    "Technology Solutions",
+    "Strategic Procurement",
+    "Infrastructure",
+    "Consulting",
+    "Others"
+  ];
+
+  const durations = [
+    "1-3 Months",
+    "3-6 Months",
+    "6-12 Months",
+    "1-2 Years",
+    "2+ Years"
+  ];
+
+  const teamSizes = [
+    "1-5 Experts",
+    "5-10 Experts",
+    "10-20 Experts",
+    "20-50 Experts",
+    "50+ Experts"
+  ];
 
   useEffect(() => {
     if (isEdit) fetchProject();
@@ -102,7 +149,7 @@ const Form = () => {
       const res = await http.get(`/get-project/${id}/`);
       const resp: ApiResp = res.data;
       if (resp.error == false && resp.data && Array.isArray(resp.data) && resp.data.length > 0) {
-        const projectData = resp.data[0]; // Get the first project from the array
+        const projectData = resp.data[0];
         setData({
           id: projectData.id,
           title: projectData.title || "",
@@ -113,6 +160,12 @@ const Form = () => {
           impact: projectData.impact || "",
           cover_image: projectData.cover_image || null,
           gallery: projectData.gallery || [],
+          duration: projectData.duration || "",
+          budget: projectData.budget || "",
+          team_size: projectData.team_size || "",
+          location: projectData.location || "",
+          key_results: projectData.key_results ? projectData.key_results.split(',').map(r => r.trim()) : [""],
+          sector: projectData.sector || ""
         });
         setPreviewCover(projectData.cover_image ? resolveSrc(projectData.cover_image) : null);
         return;
@@ -139,6 +192,35 @@ const Form = () => {
     }
     setGalleryFiles((prev) => [...prev, ...files]);
     setPreviewGallery((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+  };
+
+  const addKeyResult = () => {
+    if (data.key_results.length >= 10) {
+      toast.error("Maximum 10 key results allowed");
+      return;
+    }
+    setData(prev => ({
+      ...prev,
+      key_results: [...prev.key_results, ""]
+    }));
+  };
+
+  const updateKeyResult = (index: number, value: string) => {
+    setData(prev => ({
+      ...prev,
+      key_results: prev.key_results.map((kr, i) => i === index ? value : kr)
+    }));
+  };
+
+  const removeKeyResult = (index: number) => {
+    if (data.key_results.length <= 1) {
+      toast.error("At least one key result is required");
+      return;
+    }
+    setData(prev => ({
+      ...prev,
+      key_results: prev.key_results.filter((_, i) => i !== index)
+    }));
   };
 
   const deleteGalleryImage = async (imgId: number) => {
@@ -179,6 +261,13 @@ const Form = () => {
       return;
     }
 
+    // Validate key results
+    const validKeyResults = data.key_results.filter(kr => kr.trim().length > 0);
+    if (validKeyResults.length === 0) {
+      toast.error("At least one key result is required");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -192,6 +281,12 @@ const Form = () => {
       form.append("challenges", data.challenges);
       form.append("solution", data.solution);
       form.append("impact", data.impact);
+      form.append("duration", data.duration);
+      form.append("budget", data.budget);
+      form.append("team_size", data.team_size);
+      form.append("location", data.location);
+      form.append("key_results", data.key_results.filter(kr => kr.trim().length > 0).join(','));
+      form.append("sector", data.sector);
 
       if (coverFile) form.append("cover_image", coverFile);
 
@@ -216,10 +311,11 @@ const Form = () => {
 
   const tabs = [
     { id: "basic", name: "Basic Info", icon: FileText },
-    { id: "details", name: "Details", icon: FolderKanban },
+    { id: "details", name: "Project Details", icon: FolderKanban },
+    { id: "metrics", name: "Metrics", icon: BarChart },
     { id: "challenges", name: "Challenges", icon: Target },
     { id: "solution", name: "Solution", icon: Zap },
-    { id: "impact", name: "Impact", icon: BarChart },
+    { id: "impact", name: "Impact", icon: TrendingUp },
     { id: "gallery", name: "Gallery", icon: Camera },
   ];
 
@@ -403,28 +499,153 @@ const Form = () => {
                     </>
                   )}
 
-                  {/* Details Tab */}
+                  {/* Project Details Tab */}
                   {activeTab === "details" && (
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <label className="text-xl font-heading font-bold text-gray-900">Full Description</label>
-                        <span className="text-gray-600 text-sm">{charCount.long_desc} characters</span>
+                    <div className="space-y-8">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <label className="text-xl font-heading font-bold text-gray-900">Full Description</label>
+                          <span className="text-gray-600 text-sm">{charCount.long_desc} characters</span>
+                        </div>
+                        <textarea
+                          value={data.long_desc}
+                          onChange={(e) => setData({ ...data, long_desc: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all min-h-[200px]"
+                          placeholder="Detailed description of the project"
+                        />
+                        <div className="flex items-center space-x-4 mt-4">
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            <CheckCircle className="w-5 h-5 text-amber-500" />
+                            <span className="text-sm">Provide comprehensive details</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            <CheckCircle className="w-5 h-5 text-amber-500" />
+                            <span className="text-sm">Include key achievements</span>
+                          </div>
+                        </div>
                       </div>
-                      <textarea
-                        value={data.long_desc}
-                        onChange={(e) => setData({ ...data, long_desc: e.target.value })}
-                        className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all min-h-[200px]"
-                        placeholder="Detailed description of the project"
-                      />
-                      <div className="flex items-center space-x-4 mt-4">
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <CheckCircle className="w-5 h-5 text-amber-500" />
-                          <span className="text-sm">Provide comprehensive details</span>
+
+                      <div>
+                        <label className="text-xl font-heading font-bold text-gray-900 mb-4 block">Sector</label>
+                        <select
+                          value={data.sector}
+                          onChange={(e) => setData({ ...data, sector: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                        >
+                          <option value="">Select a sector</option>
+                          {sectors.map(sector => (
+                            <option key={sector} value={sector}>{sector}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xl font-heading font-bold text-gray-900 mb-4 block">Location</label>
+                        <div className="flex items-center">
+                          <MapPin className="w-6 h-6 text-amber-500 ml-4 mr-2 -translate-x-2 absolute" />
+                          <input
+                            type="text"
+                            value={data.location}
+                            onChange={(e) => setData({ ...data, location: e.target.value })}
+                            className="w-full pl-12 pr-6 py-4 rounded-xl bg-gray-50 border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                            placeholder="e.g., Lagos, Nigeria"
+                          />
                         </div>
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <CheckCircle className="w-5 h-5 text-amber-500" />
-                          <span className="text-sm">Include key achievements</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Metrics Tab */}
+                  {activeTab === "metrics" && (
+                    <div className="space-y-8">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-xl font-heading font-bold text-gray-900 mb-4 block">Project Duration</label>
+                          <select
+                            value={data.duration}
+                            onChange={(e) => setData({ ...data, duration: e.target.value })}
+                            className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                          >
+                            <option value="">Select duration</option>
+                            {durations.map(duration => (
+                              <option key={duration} value={duration}>{duration}</option>
+                            ))}
+                          </select>
                         </div>
+
+                        <div>
+                          <label className="text-xl font-heading font-bold text-gray-900 mb-4 block">Team Size</label>
+                          <select
+                            value={data.team_size}
+                            onChange={(e) => setData({ ...data, team_size: e.target.value })}
+                            className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                          >
+                            <option value="">Select team size</option>
+                            {teamSizes.map(size => (
+                              <option key={size} value={size}>{size}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xl font-heading font-bold text-gray-900 mb-4 block">Project Budget</label>
+                        <div className="flex items-center">
+                          <DollarSign className="w-6 h-6 text-amber-500 ml-4 mr-2 -translate-x-2 absolute" />
+                          <input
+                            type="text"
+                            value={data.budget}
+                            onChange={(e) => setData({ ...data, budget: e.target.value })}
+                            className="w-full pl-12 pr-6 py-4 rounded-xl bg-gray-50 border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                            placeholder="e.g., $500,000 or Confidential"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <label className="text-xl font-heading font-bold text-gray-900">Key Results</label>
+                          <button
+                            type="button"
+                            onClick={addKeyResult}
+                            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-medium hover:from-amber-600 hover:to-amber-500 transition-all"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>Add Result</span>
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          {data.key_results.map((result, index) => (
+                            <div key={index} className="flex items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center">
+                                  <CheckCircle className="w-5 h-5 text-green-500 ml-4 mr-2 -translate-x-2 absolute" />
+                                  <input
+                                    type="text"
+                                    value={result}
+                                    onChange={(e) => updateKeyResult(index, e.target.value)}
+                                    className="w-full pl-12 pr-6 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                                    placeholder={`Key result #${index + 1} (e.g., Increased efficiency by 40%)`}
+                                  />
+                                </div>
+                              </div>
+                              {data.key_results.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeKeyResult(index)}
+                                  className="p-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <p className="text-gray-500 text-sm mt-4">
+                          {data.key_results.length}/10 key results added
+                        </p>
                       </div>
                     </div>
                   )}
@@ -483,7 +704,7 @@ const Form = () => {
                         placeholder="Describe the measurable impact and outcomes of the project"
                       />
                       <div className="flex items-center space-x-2 mt-4 text-gray-600">
-                        <BarChart className="w-5 h-5 text-amber-500" />
+                        <TrendingUp className="w-5 h-5 text-amber-500" />
                         <span className="text-sm">Include metrics, statistics, and tangible results</span>
                       </div>
                     </div>
@@ -682,7 +903,7 @@ const Form = () => {
                       </div>
 
                       {/* Project Details */}
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {data.title && (
                           <h4 className="text-xl font-heading font-bold text-gray-900">{data.title}</h4>
                         )}
@@ -691,19 +912,74 @@ const Form = () => {
                           <p className="text-gray-600 text-sm leading-relaxed">{data.short_desc}</p>
                         )}
 
+                        {/* Project Metrics */}
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                          {data.duration && (
+                            <div className="flex items-center space-x-2 text-sm text-gray-700">
+                              <Clock className="w-4 h-4 text-amber-600" />
+                              <span>{data.duration}</span>
+                            </div>
+                          )}
+                          {data.team_size && (
+                            <div className="flex items-center space-x-2 text-sm text-gray-700">
+                              <Users className="w-4 h-4 text-amber-600" />
+                              <span>{data.team_size}</span>
+                            </div>
+                          )}
+                          {data.location && (
+                            <div className="flex items-center space-x-2 text-sm text-gray-700">
+                              <MapPin className="w-4 h-4 text-amber-600" />
+                              <span>{data.location}</span>
+                            </div>
+                          )}
+                          {data.sector && (
+                            <div className="flex items-center space-x-2 text-sm text-gray-700">
+                              <Building2 className="w-4 h-4 text-amber-600" />
+                              <span>{data.sector}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Key Results Preview */}
+                        {data.key_results.filter(kr => kr.trim()).length > 0 && (
+                          <div className="pt-4 border-t border-amber-200">
+                            <div className="flex items-center space-x-2 mb-3">
+                              <TargetIcon className="w-5 h-5 text-amber-600" />
+                              <h5 className="font-heading font-bold text-gray-900 text-sm">Key Results</h5>
+                            </div>
+                            <div className="space-y-2">
+                              {data.key_results.slice(0, 3).map((result, index) => (
+                                result.trim() && (
+                                  <div key={index} className="flex items-start space-x-2">
+                                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <p className="text-gray-600 text-sm leading-relaxed">
+                                      {result.substring(0, 60)}{result.length > 60 && '...'}
+                                    </p>
+                                  </div>
+                                )
+                              ))}
+                              {data.key_results.filter(kr => kr.trim()).length > 3 && (
+                                <p className="text-amber-600 text-xs">
+                                  +{data.key_results.filter(kr => kr.trim()).length - 3} more results
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Status Indicators */}
                         <div className="grid grid-cols-2 gap-3 pt-4">
-                          <div className="text-center p-3 rounded-xl bg-white border border-amber-200">
-                            <div className="text-lg font-heading font-bold text-gray-900">
-                              {data.long_desc ? data.long_desc.split(' ').length : 0}
-                            </div>
-                            <div className="text-gray-600 text-xs">Words in Details</div>
-                          </div>
                           <div className="text-center p-3 rounded-xl bg-white border border-amber-200">
                             <div className="text-lg font-heading font-bold text-gray-900">
                               {data.gallery.length + previewGallery.length}
                             </div>
                             <div className="text-gray-600 text-xs">Gallery Images</div>
+                          </div>
+                          <div className="text-center p-3 rounded-xl bg-white border border-amber-200">
+                            <div className="text-lg font-heading font-bold text-gray-900">
+                              {data.key_results.filter(kr => kr.trim()).length}
+                            </div>
+                            <div className="text-gray-600 text-xs">Key Results</div>
                           </div>
                         </div>
                       </div>
@@ -741,7 +1017,7 @@ const Form = () => {
                       {data.impact && (
                         <div className="pt-4 border-t border-amber-200">
                           <div className="flex items-center space-x-2 mb-2">
-                            <BarChart className="w-5 h-5 text-amber-600" />
+                            <TrendingUp className="w-5 h-5 text-amber-600" />
                             <h5 className="font-heading font-bold text-gray-900 text-sm">Impact</h5>
                           </div>
                           <p className="text-gray-600 text-sm leading-relaxed">
@@ -750,6 +1026,28 @@ const Form = () => {
                         </div>
                       )}
                     </div>
+                  </div>
+                </div>
+
+                {/* Progress Indicator */}
+                <div className="mt-6 bg-white rounded-2xl border border-gray-200 p-6">
+                  <h4 className="font-heading font-bold text-gray-900 mb-4">Form Progress</h4>
+                  <div className="space-y-3">
+                    {tabs.map((tab) => (
+                      <div key={tab.id} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded-full ${activeTab === tab.id ? 'bg-amber-500' : 
+                            getTabStatus(tab.id, data) ? 'bg-green-500' : 'bg-gray-300'}`} />
+                          <span className={`text-sm ${activeTab === tab.id ? 'text-amber-600 font-medium' : 
+                            getTabStatus(tab.id, data) ? 'text-gray-700' : 'text-gray-500'}`}>
+                            {tab.name}
+                          </span>
+                        </div>
+                        {getTabStatus(tab.id, data) && (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -805,6 +1103,29 @@ const Form = () => {
       <Footer />
     </div>
   );
+};
+
+// Helper function to check if a tab has content
+const getTabStatus = (tabId: string, data: Project): boolean => {
+  switch (tabId) {
+    case "basic":
+      return data.title.trim().length > 0 && data.short_desc.trim().length > 0;
+    case "details":
+      return data.long_desc.trim().length > 0 || data.sector.trim().length > 0 || data.location.trim().length > 0;
+    case "metrics":
+      return data.duration.trim().length > 0 || data.team_size.trim().length > 0 || 
+             data.budget.trim().length > 0 || data.key_results.some(kr => kr.trim().length > 0);
+    case "challenges":
+      return data.challenges.trim().length > 0;
+    case "solution":
+      return data.solution.trim().length > 0;
+    case "impact":
+      return data.impact.trim().length > 0;
+    case "gallery":
+      return data.gallery.length > 0;
+    default:
+      return false;
+  }
 };
 
 export default Form;

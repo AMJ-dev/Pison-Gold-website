@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type PropsWithChildren } from "react";
+import {toast} from "react-toastify";
 import UserContext from "../lib/userContext";
 import { jwtDecode } from "jwt-decode";
 import { User, TokenRemember } from "@/lib/types";
@@ -37,15 +38,19 @@ export default function UserProvider({ children }: PropsWithChildren) {
 
 	const fetchUser = async () => {
 		try {
-		const res = await http.get("/get-profile/");
+		const res:any = await http.get("/get-profile/");
 		const resp: ApiResp = res.data;
-
-		if (!resp.error && resp.data) {
+		// console.log(res?.response?.status)
+		if (resp.error === false && resp.data) {
 			setMyDetails(resp.data);
 			setDetailsReady(true);
 		}
 		} catch (error) {
-		console.log("Profile fetch error:", error);
+			toast.error("Session expired, logging Out");
+			if(error?.status === 401 || error?.response?.status === 401) logout();
+			// console.log(error?.status);
+		} finally {
+			setDetailsReady(true);
 		}
 	};
 
