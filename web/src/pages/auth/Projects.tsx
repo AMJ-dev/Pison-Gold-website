@@ -18,7 +18,9 @@ import {
   X,
   Grid,
   List,
-  ExternalLink
+  ExternalLink,
+  Rocket,
+  Star
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { resolveSrc, str_to_url } from "@/lib/functions";
@@ -28,6 +30,7 @@ import { toast } from "react-toastify";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import projectsHero from "@/assets/projects-hero.jpg";
 
 interface Project {
   id: number;
@@ -286,63 +289,31 @@ const Projects = () => {
       <Header />
 
       {/* Enhanced Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-navy/10 via-transparent to-gold/5" />
-        <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-gold/20 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-navy/10 to-transparent rounded-full blur-3xl" />
-        
-        <div className="container-custom relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-4xl mx-auto text-center"
-          >
-            <div className="inline-flex items-center gap-3 px-4 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-full text-sm font-medium mb-8">
-              <Sparkles className="w-4 h-4" />
-              <span>Portfolio Showcase</span>
-              <div className="h-4 w-px bg-white/30" />
-              <span>{projects.length} Projects</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-              Impactful Projects
-              <span className="block text-gradient-gold relative">
-                That Transform
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-gold to-transparent" />
+      <section className="relative h-[60vh] min-h-[500px] overflow-hidden">
+        <Rocket className="absolute top-[20%] right-[15%] w-10 h-10 text-accent/20 animate-float z-10" />
+        <Star className="absolute bottom-[30%] left-[10%] w-8 h-8 text-white/10 animate-float-slow z-10" />
+
+        <img src={projectsHero} alt="Our Projects" className="absolute inset-0 w-full h-full object-cover" />
+
+        <div className="absolute inset-0 bg-gradient-to-r from-navy-dark/90 via-navy/70 to-transparent" />
+
+        <div className="absolute inset-0 flex items-center">
+          <div className="container-custom">
+            <div className="max-w-2xl animate-fade-up">
+              <span className="inline-flex items-center space-x-2 px-4 py-2 bg-accent/20 backdrop-blur-sm rounded-full text-accent text-sm font-medium mb-4 shadow-lg">
+                <Target className="w-4 h-4" />
+                <span>Projects & Impact</span>
               </span>
-            </h1>
-            
-            <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-              Discover how we deliver measurable results across {sectors.length - 1} sectors, 
-              turning complex challenges into sustainable success stories.
-            </p>
-            
-            {/* Enhanced Stats */}
-            <motion.div 
-              className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <motion.div variants={itemVariants} className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-foreground mb-1">{projects.length}</div>
-                <div className="text-sm text-muted-foreground font-medium">Total Projects</div>
-              </motion.div>
-              <motion.div variants={itemVariants} className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-foreground mb-1">{sectors.length - 1}</div>
-                <div className="text-sm text-muted-foreground font-medium">Industries</div>
-              </motion.div>
-              <motion.div variants={itemVariants} className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-foreground mb-1">{projectStats.totalLocations}</div>
-                <div className="text-sm text-muted-foreground font-medium">Locations</div>
-              </motion.div>
-              <motion.div variants={itemVariants} className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-foreground mb-1">100%</div>
-                <div className="text-sm text-muted-foreground font-medium">Success Rate</div>
-              </motion.div>
-            </motion.div>
-          </motion.div>
+
+              <h1 className="font-heading text-5xl md:text-6xl font-bold text-primary-foreground mt-4 mb-6">
+                Our Portfolio of Progress
+              </h1>
+
+              <p className="text-lg text-primary-foreground/80">
+                Explore our completed projects and see how we've transformed challenges into opportunities.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

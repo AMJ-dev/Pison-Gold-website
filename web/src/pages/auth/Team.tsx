@@ -1,558 +1,616 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Users,
-  Star,
-  Sparkles,
-  Diamond,
-  Heart,
-  Zap,
-  ArrowRight,
-  Mail,
-  Linkedin,
-  Facebook,
-  Twitter,
-  Briefcase,
-  Award,
-  Target,
-  ChevronRight,
-  MapPin,
-  Phone,
-  Globe,
-  Clock,
-  TrendingUp,
-  Shield,
-  Brain,
-  Palette,
-  Code,
-  BarChart,
-  Camera,
-  Music,
-  BookOpen,
-  Coffee
-} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { http } from "@/lib/httpClient";
-import { ApiResp } from "@/lib/types";
-import { toast } from "react-toastify";
-import { resolveSrc } from "@/lib/functions";
+import {
+  ArrowRight,
+  Building2,
+  Stethoscope,
+  Cpu,
+  Package,
+  Shield,
+  FileCheck,
+  Users,
+  Landmark,
+  CheckCircle2,
+  BadgeCheck,
+  FileText,
+  Lock,
+  Award,
+  Globe,
+  Zap,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  FileSearch,
+  ShieldCheck,
+  ClipboardCheck,
+  BookOpen,
+  Target,
+  Star,
+  Diamond
+} from "lucide-react";
+
+import complianceHero from "@/assets/compliance-hero.jpg";
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import teamHero from "@/assets/team-hero.jpg";
-import Preloader from "@/components/Preloader";
 
-interface TeamMember {
-  id: number;
-  full_name: string;
-  position: string;
-  bio: string;
-  image: string;
-  facebook: string;
-  linkedin: string;
-  twitter: string;
-  email: string;
-  phone: string;
-  company?: string;
-  department?: string;
-  expertise?: string[];
-  created_at: string;
-}
-
-// Color themes for different departments
-const departmentThemes = {
-  engineering: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: Code },
-  design: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: Palette },
-  marketing: { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700', icon: BarChart },
-  leadership: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: Award },
-  product: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: Brain },
-  default: { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700', icon: Users }
+const fadeInUp = {
+  hidden: { y: 50, opacity: 0 },
+  show: { 
+    y: 0, 
+    opacity: 1,
+    transition: { duration: 0.7, ease: "easeOut" }
+  }
 };
 
-const Team = () => {
-  const [teams, setTeams] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<string>('all');
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15
+    }
+  }
+};
+
+const scaleIn = {
+  hidden: { scale: 0.9, opacity: 0 },
+  show: { 
+    scale: 1, 
+    opacity: 1,
+    transition: { duration: 0.5, ease: "easeOut" }
+  }
+};
+
+const Compliance = () => {
+  const [selectedCredential, setSelectedCredential] = useState<number | null>(0);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
-  // Group teams by department
-  const teamsByDepartment = useMemo(() => {
-    const groups: Record<string, TeamMember[]> = {};
-    teams.forEach(team => {
-      const dept = team.department || 'general';
-      if (!groups[dept]) groups[dept] = [];
-      groups[dept].push(team);
-    });
-    return groups;
-  }, [teams]);
+  // --------------------------
+  // OFFICIAL SERVICES (unchanged)
+  // --------------------------
+  const services = [
+    { name: "Real Estate", path: "/services/real-estate", icon: Building2 },
+    { name: "Healthcare", path: "/services/healthcare", icon: Stethoscope },
+    { name: "Technology", path: "/services/technology", icon: Cpu },
+    { name: "Procurement", path: "/services/procurement", icon: Package },
+  ];
 
-  const departments = Object.keys(teamsByDepartment);
+  // --------------------------
+  // FULLY UPDATED CREDENTIALS  
+  // Matches your document exactly  
+  // --------------------------
+  const credentials = [
+    {
+      icon: Building2,
+      title: "Corporate Integrity",
+      description: "CAC Registration (RC 1604250)",
+      details:
+        "Pison-Gold is fully registered with the Corporate Affairs Commission of Nigeria (CAC), establishing our legal identity and reinforcing our commitment to transparency, legitimacy, and responsible governance.",
+      color: "from-blue-500 to-indigo-600",
+      bg: "bg-gradient-to-br from-blue-500/5 to-indigo-500/5",
+      border: "border-blue-200"
+    },
+    {
+      icon: FileCheck,
+      title: "Financial Probity",
+      description: "SCUML Certified & FIRS Tax Compliant",
+      details:
+        "We comply with the Special Control Unit Against Money Laundering (SCUML) and maintain up-to-date tax obligations with the Federal Inland Revenue Service (FIRS), ensuring financial responsibility at all operational levels.",
+      color: "from-emerald-500 to-teal-600",
+      bg: "bg-gradient-to-br from-emerald-500/5 to-teal-500/5",
+      border: "border-emerald-200"
+    },
+    {
+      icon: Users,
+      title: "Workforce Protection",
+      description: "PENCOM • NSITF • ITF Compliance",
+      details:
+        "As part of our social and statutory obligations, Pison-Gold adheres strictly to pension regulations (PENCOM), employee compensation insurance (NSITF), and workforce development contributions (ITF). This ensures employee safety, welfare, and continuous capacity building.",
+      color: "from-amber-500 to-orange-600",
+      bg: "bg-gradient-to-br from-amber-500/5 to-orange-500/5",
+      border: "border-amber-200"
+    },
+    {
+      icon: Landmark,
+      title: "Government Recognition",
+      description: "Verified Contractor – Bureau of Public Procurement (BPP)",
+      details:
+        "Pison-Gold is officially recognized by the Bureau of Public Procurement, authorizing our participation in federal contracting, procurement, and project execution across public-sector initiatives.",
+      color: "from-purple-500 to-pink-600",
+      bg: "bg-gradient-to-br from-purple-500/5 to-pink-500/5",
+      border: "border-purple-200"
+    },
+  ];
 
-  useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        setLoading(true);
-        const res = await http.get("/get-teams/");
-        const resp: ApiResp = res.data;
-        
-        if (resp.error == false && resp.data) {
-          const teamsData = Array.isArray(resp.data) ? resp.data : [];
-          setTeams(teamsData);
-          return;
-        }
-        toast.error(resp.data || "Failed to load teams");
-        setError(resp.data || "Failed to load teams");
-      } catch (error) {
-        console.error("Fetch teams error:", error);
-        toast.error("Connection error");
-        setError("Failed to fetch teams");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTeams();
-  }, []);
-
-  if (loading) {
-    return <Preloader />;
-  }
+  const benefits = [
+    {
+      icon: ShieldCheck,
+      title: "Client Protection",
+      description:
+        "Our compliance ensures that every engagement is conducted under legally recognized structures, protecting clients from operational or contractual risk.",
+      color: "from-blue-500 to-cyan-500"
+    },
+    {
+      icon: Award,
+      title: "Quality Assurance",
+      description:
+        "Regulatory oversight guarantees that every project—private or public—meets stringent standards of quality, safety, and professional excellence.",
+      color: "from-emerald-500 to-teal-500"
+    },
+    {
+      icon: Target,
+      title: "Risk Mitigation",
+      description:
+        "Working with a compliant partner reduces exposure to financial, operational, and legal risks, making Pison-Gold a safe, reliable choice.",
+      color: "from-amber-500 to-orange-500"
+    },
+    {
+      icon: Globe,
+      title: "Market Access",
+      description:
+        "Our credentials open doors to government contracts and regulated sectors, expanding partnership opportunities across multiple industries.",
+      color: "from-purple-500 to-pink-500"
+    },
+    {
+      icon: BookOpen,
+      title: "Transparency",
+      description:
+        "Clear documentation and regular audits ensure complete visibility into our operations, building trust through openness.",
+      color: "from-gray-600 to-gray-700"
+    },
+    {
+      icon: Star,
+      title: "Industry Leadership",
+      description:
+        "We set the standard for compliance excellence, demonstrating commitment to ethical business practices and industry best practices.",
+      color: "from-gold to-amber-500"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50/50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <Header />
-      
-      {/* Premium Hero Section */}
-      <section className="pt-36 relative min-h-[85vh] flex items-center overflow-hidden">
-        {/* Background with gradient mesh */}
+
+      {/* PREMIUM HERO SECTION */}
+      <section className="relative h-[70vh] min-h-[600px] overflow-hidden">
+        {/* Background Image */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-amber-900/20" />
-          <div 
-            className="absolute inset-0 opacity-30"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
+          <img
+            src={complianceHero}
+            alt="Compliance"
+            className="w-full h-full object-cover"
           />
           
-          {/* Animated gradient orbs */}
+          {/* Gradient Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-r from-navy-dark/90 via-navy/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          
+          {/* Animated Elements */}
           <motion.div
-            className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-r from-amber-500/10 to-transparent rounded-full blur-3xl"
+            className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-r from-gold/10 to-transparent rounded-full blur-3xl"
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.5, 0.3]
             }}
             transition={{ duration: 8, repeat: Infinity }}
           />
-          <motion.div
-            className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-gradient-to-l from-gray-700/10 to-transparent rounded-full blur-3xl"
-            animate={{
-              scale: [1.2, 1, 1.2],
-              opacity: [0.4, 0.2, 0.4]
-            }}
-            transition={{ duration: 10, repeat: Infinity }}
-          />
         </div>
 
-        {/* Content */}
-        <div className="container-custom relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
+        {/* Hero Content */}
+        <div className="absolute inset-0 flex items-center">
+          <div className="container-custom">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 1 }}
+              className="max-w-2xl"
             >
-              {/* Premium badge */}
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 mb-8">
-                <div className="flex items-center gap-2">
-                  <Diamond className="w-5 h-5 text-amber-400" />
-                  <span className="text-white/90 font-medium text-sm tracking-wider">MEET OUR TEAM</span>
-                </div>
+              {/* Premium Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 mb-8"
+              >
+                <Shield className="w-5 h-5 text-gold animate-pulse" />
+                <span className="text-white/90 font-medium text-sm tracking-wider">OUR CREDENTIALS</span>
                 <div className="h-4 w-px bg-white/30" />
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span className="text-white/80 text-sm">EXCELLENCE IN ACTION</span>
+                  <Sparkles className="w-4 h-4 text-gold" />
+                  <span className="text-white/80 text-sm">FULLY COMPLIANT</span>
                 </div>
-              </div>
+              </motion.div>
 
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-8 leading-[0.9] tracking-tight">
-                <span className="block">THE</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400">
-                  MINDS
+              {/* Main Heading */}
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="font-heading text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-[0.9] tracking-tight"
+              >
+                <span className="block">COMPLIANCE</span>
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-gold">
+                  & CREDENTIALS
                 </span>
-                <span className="block">BEHIND THE MAGIC</span>
-              </h1>
+              </motion.h1>
 
-              <p className="text-xl text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
-                A collective of visionaries, innovators, and craftsmen dedicated to transforming 
-                complex challenges into elegant solutions.
-              </p>
+              {/* Description */}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-xl text-white/80 mb-8 leading-relaxed font-light"
+              >
+                The Foundation of Trust is Built on Transparency and Regulatory Excellence
+              </motion.p>
 
-              {/* Stats ribbon */}
-              <div className="flex flex-wrap justify-center gap-6 mb-12">
+              {/* Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="flex flex-wrap gap-8 mb-8"
+              >
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">{teams.length}</div>
-                  <div className="text-white/60 text-sm tracking-wider">EXPERTS</div>
+                  <div className="text-3xl font-bold text-white mb-2">4</div>
+                  <div className="text-white/60 text-sm tracking-wider uppercase">Core Credentials</div>
                 </div>
-                <div className="h-12 w-px bg-white/20" />
+                <div className="h-8 w-px bg-white/20" />
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">15+</div>
-                  <div className="text-white/60 text-sm tracking-wider">YEARS EXPERIENCE</div>
+                  <div className="text-3xl font-bold text-white mb-2">100%</div>
+                  <div className="text-white/60 text-sm tracking-wider uppercase">Compliance Rate</div>
                 </div>
-                <div className="h-12 w-px bg-white/20" />
+                <div className="h-8 w-px bg-white/20" />
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">50+</div>
-                  <div className="text-white/60 text-sm tracking-wider">PROJECTS DELIVERED</div>
+                  <div className="text-3xl font-bold text-white mb-2">6+</div>
+                  <div className="text-white/60 text-sm tracking-wider uppercase">Years Verified</div>
                 </div>
-              </div>
+              </motion.div>
 
-              {/* Team avatars preview */}
-              <div className="flex justify-center -space-x-6 mb-12">
-                {teams.slice(0, 5).map((team, index) => (
-                  <motion.div
-                    key={team.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="relative group"
-                  >
-                    <div className="w-20 h-20 rounded-full border-4 border-gray-900 overflow-hidden relative z-10">
-                      <img 
-                        src={resolveSrc(team.image)} 
-                        alt={team.full_name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400/30 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  </motion.div>
-                ))}
-              </div>
+              {/* CTA Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <Link
+                  to="/contact"
+                  className="group inline-flex items-center gap-3 bg-gradient-to-r from-gold to-gold-dark text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-2xl shadow-gold/40 hover:shadow-gold/60 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  <span>Verify Our Credentials</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                </Link>
+              </motion.div>
 
-              {/* Scroll indicator */}
+              {/* Scroll Indicator */}
               <motion.div
                 animate={{ y: [0, 10, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="inline-flex items-center justify-center w-14 h-14 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm"
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block"
               >
-                <ChevronRight className="w-6 h-6 text-white rotate-90" />
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-white/60 text-sm tracking-wider">Scroll to explore</span>
+                  <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+                    <div className="w-1 h-3 bg-gold rounded-full mt-2" />
+                  </div>
+                </div>
               </motion.div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Departments Filter */}
-      <section className="py-16 bg-white border-y border-gray-100">
+      {/* INTRODUCTION */}
+      <section className="py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="container-custom">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Meet by <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-400">Specialization</span>
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <motion.div
+              variants={fadeInUp}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 rounded-full text-gold font-semibold mb-6"
+            >
+              <Shield className="w-4 h-4" />
+              <span>Built on Integrity</span>
+            </motion.div>
+
+            <motion.h2
+              variants={fadeInUp}
+              className="font-heading text-4xl md:text-5xl font-bold mb-8"
+            >
+              Rock-Solid <span className="text-gradient-gold">Foundation</span>
+            </motion.h2>
+
+            <motion.p
+              variants={fadeInUp}
+              className="text-gray-600 text-xl leading-relaxed"
+            >
+              Pison-Gold operates with unwavering commitment to legality, ethical governance,
+              and responsible business conduct. Our credentials reflect a long-term dedication 
+              to transparency, compliance, and nationally recognized corporate standards.
+            </motion.p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CREDENTIALS GRID - ENHANCED */}
+      <section className="py-24 bg-white">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-gold/10 to-gold/5 backdrop-blur-xl rounded-2xl border border-gold/20 mb-8">
+              <FileSearch className="w-5 h-5 text-gold" />
+              <span className="text-gold font-medium tracking-wider">OFFICIAL CREDENTIALS</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Verified <span className="text-gradient-gold">Compliance</span>
             </h2>
-            <p className="text-gray-600 text-lg">
-              Explore our team organized by expertise and functional areas
+            <p className="text-gray-600 text-xl max-w-2xl mx-auto">
+              Our credentials are the cornerstone of our commitment to excellence and transparency.
             </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {credentials.map((credential, index) => {
+              const Icon = credential.icon;
+              const isSelected = selectedCredential === index;
+              
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  onClick={() => setSelectedCredential(isSelected ? null : index)}
+                  onMouseEnter={() => setHoveredCard(index)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                  className="group relative cursor-pointer"
+                >
+                  {/* Card background */}
+                  <div className={`absolute inset-0 bg-gradient-to-br from-white to-gray-50 rounded-3xl border ${credential.border} shadow-lg group-hover:shadow-2xl transition-all duration-500`} />
+                  
+                  {/* Hover gradient overlay */}
+                  <div className={`absolute inset-0 rounded-3xl ${credential.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+
+                  {/* Department accent */}
+                  <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-3xl bg-gradient-to-r ${credential.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+
+                  <div className="relative p-8">
+                    <div className="flex items-start gap-6">
+                      {/* Icon */}
+                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${credential.color} flex items-center justify-center shadow-lg`}>
+                        <Icon className="w-8 h-8 text-white" />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-heading text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors">
+                              {credential.title}
+                            </h3>
+                            <p className="text-gold font-medium mb-3">
+                              {credential.description}
+                            </p>
+                          </div>
+                          <button className="text-gray-400 hover:text-gold transition-colors">
+                            {isSelected ? (
+                              <ChevronUp className="w-5 h-5" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Expanding Details */}
+                        <AnimatePresence>
+                          {isSelected && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pt-4 border-t border-gray-100 group-hover:border-gray-200 transition-colors">
+                                <p className="text-gray-600 leading-relaxed">
+                                  {credential.details}
+                                </p>
+                                
+                                {/* Verification badge */}
+                                <div className="flex items-center gap-2 mt-4">
+                                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/5 text-green-700 rounded-full text-sm">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    <span>Verified & Active</span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Updated annually
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Verification badge when collapsed */}
+                        {!isSelected && (
+                          <div className="flex items-center gap-2 mt-4">
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            <span className="text-sm text-gray-500">Verified & Active</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
 
-          {/* Filter chips */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
-            <button
-              onClick={() => setActiveFilter('all')}
-              className={`px-6 py-3 rounded-xl border transition-all duration-300 ${
-                activeFilter === 'all'
-                  ? 'bg-amber-600 text-white border-amber-600 shadow-lg shadow-amber-600/20'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-amber-300 hover:text-amber-700'
-              }`}
-            >
-              All Teams
-            </button>
-            {departments.map(dept => {
-              const theme = departmentThemes[dept as keyof typeof departmentThemes] || departmentThemes.default;
-              const Icon = theme.icon;
+          {/* Credential Legend */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-12 pt-8 border-t border-gray-200"
+          >
+            <div className="flex flex-wrap justify-center gap-6">
+              {[
+                { icon: CheckCircle2, label: "Annually Verified", color: "text-green-600" },
+                { icon: FileText, label: "Full Documentation", color: "text-blue-600" },
+                { icon: Shield, label: "Regulatory Compliance", color: "text-gold" },
+                { icon: Zap, label: "Active Status", color: "text-emerald-600" },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <item.icon className={`w-4 h-4 ${item.color}`} />
+                  <span className="text-sm text-gray-600">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* WHY COMPLIANCE MATTERS - ENHANCED */}
+      <section className="py-24 bg-gradient-to-br from-navy-dark via-navy to-navy-dark relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
+        </div>
+
+        <div className="container-custom relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 mb-8">
+              <Target className="w-5 h-5 text-gold" />
+              <span className="text-white font-medium tracking-wider">THE VALUE OF COMPLIANCE</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Why Our <span className="text-gradient-gold">Credentials</span> Matter
+            </h2>
+            <p className="text-white/80 text-xl max-w-2xl mx-auto">
+              Our commitment to compliance translates into tangible benefits for every partnership.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {benefits.map((benefit, index) => {
+              const Icon = benefit.icon;
               return (
-                <button
-                  key={dept}
-                  onClick={() => setActiveFilter(dept)}
-                  className={`px-6 py-3 rounded-xl border transition-all duration-300 flex items-center gap-2 ${
-                    activeFilter === dept
-                      ? `${theme.bg} ${theme.border} ${theme.text} border-2 shadow-lg`
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-                  }`}
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="group"
                 >
-                  <Icon className="w-4 h-4" />
-                  <span className="capitalize">{dept}</span>
-                  <span className="text-xs px-2 py-1 rounded-full bg-gray-100">{teamsByDepartment[dept].length}</span>
-                </button>
+                  <div className="relative h-full p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-xl hover:border-white/20 transition-all duration-500">
+                    {/* Background gradient effect */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${benefit.color}/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                    
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                        <Icon className="w-8 h-8 text-gold" />
+                      </div>
+                      
+                      <h3 className="text-xl font-bold text-white mb-4">{benefit.title}</h3>
+                      <p className="text-white/70 leading-relaxed">{benefit.description}</p>
+                    </div>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Team Grid - Premium Layout */}
-      <section className="py-24 bg-gradient-to-b from-white to-gray-50">
-        <div className="container-custom">
-          {error ? (
-            <div className="text-center py-32">
-              <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Users className="w-12 h-12 text-red-500" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Unable to Load Team</h3>
-              <p className="text-gray-600 max-w-md mx-auto mb-8">{error}</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-xl hover:shadow-lg hover:shadow-amber-500/30 transition-all duration-300 font-medium"
-              >
-                Refresh Page
-              </button>
-            </div>
-          ) : teams.length === 0 ? (
-            <div className="text-center py-32">
-              <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Users className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Team Directory Empty</h3>
-              <p className="text-gray-600">Our team profiles are being updated. Check back soon.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              <AnimatePresence>
-                {teams
-                  .filter(team => activeFilter === 'all' || team.department === activeFilter)
-                  .map((team, index) => {
-                    const theme = departmentThemes[team.department as keyof typeof departmentThemes] || departmentThemes.default;
-                    return (
-                      <motion.div
-                        key={team.id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ delay: index * 0.05, type: "spring" }}
-                        onMouseEnter={() => setHoveredCard(team.id)}
-                        onMouseLeave={() => setHoveredCard(null)}
-                        className="group relative"
-                      >
-                        {/* Card background with gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-gray-50 rounded-3xl border border-gray-200 shadow-lg group-hover:shadow-2xl transition-all duration-500" />
-                        
-                        {/* Hover gradient overlay */}
-                        <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${theme.bg.replace('50', '100')}/0 group-hover:opacity-100 opacity-0 transition-opacity duration-500`} />
-
-                        <div className="relative p-6">
-                          {/* Avatar with decorative ring */}
-                          <div className="relative mb-6">
-                            <div className="absolute -inset-4">
-                              <div className="w-full h-full rounded-full bg-gradient-to-r from-amber-400/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            </div>
-                            <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-white shadow-xl relative z-10">
-                              <img
-                                src={resolveSrc(team.image)}
-                                alt={team.full_name}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                              />
-                              {/* Online status indicator */}
-                              <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
-                            </div>
-                          </div>
-
-                          {/* Content */}
-                          <div className="space-y-4">
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">{team.full_name}</h3>
-                              <div className="flex items-center gap-2">
-                                <div className={`px-3 py-1 rounded-lg ${theme.bg} ${theme.text} text-sm font-medium`}>
-                                  {team.position}
-                                </div>
-                                {team.department && (
-                                  <div className="text-xs text-gray-500 uppercase tracking-wider">
-                                    {team.department}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                              {team.bio || "Dedicated professional committed to excellence and innovation."}
-                            </p>
-
-                            {/* Expertise tags */}
-                            {team.expertise && team.expertise.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {team.expertise.slice(0, 3).map((skill, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                                  >
-                                    {skill}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Social links - Animated on hover */}
-                            <div className="pt-4 border-t border-gray-100">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  {team.email && (
-                                    <a
-                                      href={`mailto:${team.email}`}
-                                      className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-amber-100 hover:text-amber-700 transition-all duration-300"
-                                    >
-                                      <Mail className="w-4 h-4" />
-                                    </a>
-                                  )}
-                                  {team.linkedin && (
-                                    <a
-                                      href={team.linkedin}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-blue-100 hover:text-blue-700 transition-all duration-300"
-                                    >
-                                      <Linkedin className="w-4 h-4" />
-                                    </a>
-                                  )}
-                                </div>
-                                
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Values Section - Premium Showcase */}
-      <section className="py-24 bg-gradient-to-br from-gray-900 via-gray-900 to-amber-900/10">
-        <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 mb-6">
-              <Shield className="w-5 h-5 text-amber-400" />
-              <span className="text-white font-medium tracking-wider">OUR VALUES</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              The <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">Principles</span> That Drive Us
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                icon: Brain,
-                title: "Innovation First",
-                description: "We embrace cutting-edge solutions and continuous learning to stay ahead of the curve.",
-                color: "from-blue-500/20 to-cyan-500/20"
-              },
-              {
-                icon: Target,
-                title: "Precision Execution",
-                description: "Every detail matters. We deliver pixel-perfect solutions with measurable impact.",
-                color: "from-emerald-500/20 to-green-500/20"
-              },
-              {
-                icon: Users,
-                title: "Collaborative Excellence",
-                description: "Great minds working together create extraordinary results beyond individual capabilities.",
-                color: "from-purple-500/20 to-pink-500/20"
-              },
-              {
-                icon: Heart,
-                title: "Passionate Craftsmanship",
-                description: "We love what we do, and it shows in the quality and care of our work.",
-                color: "from-amber-500/20 to-orange-500/20"
-              }
-            ].map((value, index) => (
-              <motion.div
-                key={value.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="group"
-              >
-                <div className="relative h-full p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-xl hover:border-white/20 transition-all duration-500">
-                  {/* Background gradient effect */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${value.color} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                  
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                      <value.icon className="w-8 h-8 text-amber-400" />
-                    </div>
-                    
-                    <h3 className="text-xl font-bold text-white mb-4">{value.title}</h3>
-                    <p className="text-white/70 leading-relaxed">{value.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section - Premium */}
-      <section className="py-32 relative overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-white to-amber-50/30" />
-          <div className="absolute inset-0 opacity-5"
+      {/* PREMIUM CTA SECTION */}
+      <section className="py-32 relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white">
+        <div className="absolute inset-0 opacity-20">
+          <div 
+            className="absolute inset-0"
             style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, #000 1px, transparent 0)`,
-              backgroundSize: '40px 40px'
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
             }}
           />
         </div>
 
-        <div className="container-custom relative z-10">
+        <div className="container-custom text-center relative">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-4xl mx-auto text-center"
+            className="max-w-3xl mx-auto"
           >
-            {/* Premium badge */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-amber-600/10 to-amber-500/10 backdrop-blur-xl rounded-2xl border border-amber-200/50 mb-8">
-              <Zap className="w-5 h-5 text-amber-600" />
-              <span className="text-amber-700 font-medium tracking-wider">READY TO COLLABORATE</span>
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-gold/10 to-gold/5 backdrop-blur-xl rounded-2xl border border-gold/20 mb-8">
+              <Sparkles className="w-5 h-5 text-gold" />
+              <span className="text-gold font-medium tracking-wider">PARTNER WITH CONFIDENCE</span>
             </div>
             
             <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8">
-              Let's Build <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-400">Something</span> Amazing
+              Ready to Build <span className="text-gradient-gold">Together?</span>
             </h2>
             
-            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Join forces with our team of experts to transform your vision into reality. 
-              We bring precision, passion, and proven results to every partnership.
+            <p className="text-2xl text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed">
+              Our compliance is your guarantee of integrity—ensuring that every partnership
+              is backed by transparency, accountability, and regulatory excellence.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                to="/contact" 
-                className="group relative px-10 py-4 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-2xl hover:shadow-2xl hover:shadow-amber-500/30 transition-all duration-500 font-medium inline-flex items-center gap-3"
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <Link
+                to="/contact"
+                className="group relative px-10 py-4 bg-gradient-to-r from-gold to-gold-dark text-white rounded-2xl hover:shadow-2xl hover:shadow-gold/30 transition-all duration-500 font-medium inline-flex items-center gap-3"
               >
-                <span>Start a Conversation</span>
+                <span>Get in Touch</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-                <div className="absolute inset-0 rounded-2xl border-2 border-amber-400/30 group-hover:border-amber-400/50 transition-colors duration-500" />
+                <div className="absolute inset-0 rounded-2xl border-2 border-gold/30 group-hover:border-gold/50 transition-colors duration-500" />
               </Link>
               
-              <Link 
-                to="/careers" 
-                className="px-10 py-4 bg-white text-gray-800 rounded-2xl border-2 border-gray-200 hover:border-amber-300 hover:bg-amber-50/30 transition-all duration-500 font-medium inline-flex items-center gap-3"
+              <Link
+                to="/services"
+                className="group px-10 py-4 bg-white text-gray-800 rounded-2xl border-2 border-gray-300 hover:border-gold hover:text-gold hover:bg-gold/5 transition-all duration-500 font-medium inline-flex items-center gap-3"
               >
-                <Users className="w-5 h-5" />
-                <span>Join Our Team</span>
+                <span>Explore Services</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </Link>
             </div>
-            
-            {/* Trust indicator */}
+
+            {/* Trust Indicator */}
             <div className="mt-12 pt-8 border-t border-gray-200/50">
-              <p className="text-gray-500 text-sm tracking-wider uppercase mb-4">TRUSTED BY INDUSTRY LEADERS</p>
-              <div className="flex flex-wrap justify-center gap-8 opacity-50">
-                {[Briefcase, Globe, Award, Target, Shield].map((Icon, idx) => (
-                  <Icon key={idx} className="w-8 h-8 text-gray-400" />
-                ))}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
+                <div className="text-gray-500 text-sm tracking-wider uppercase">OUR GUARANTEE:</div>
+                <div className="flex items-center gap-4">
+                  {[ShieldCheck, ClipboardCheck, FileCheck, Lock].map((Icon, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-gray-600">
+                      <Icon className="w-4 h-4 text-gold" />
+                      <span className="text-sm">
+                        {['Legal Compliance', 'Full Documentation', 'Annual Updates', 'Secure Operations'][idx]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -564,4 +622,4 @@ const Team = () => {
   );
 };
 
-export default Team;
+export default Compliance;

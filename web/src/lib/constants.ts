@@ -1,4 +1,4 @@
-export const comp_name = "Pison-Gold";
+export const comp_name = "Pison Gold";
 export const comp_name_long = "Pison Gold Integrated Projects & Services Ltd";
 export const comp_email = "pisonproject_ng@gmail.com";
 export const comp_phone = "+2348108302395";

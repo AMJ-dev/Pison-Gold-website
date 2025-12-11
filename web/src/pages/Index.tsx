@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import { motion, useAnimation, useInView } from "framer-motion";
+import { motion, useAnimation, useInView, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   Building2,
@@ -20,6 +20,13 @@ import {
   Users,
   CheckCircle,
   Quote,
+  Award,
+  Clock,
+  Heart,
+  MapPin,
+  Phone,
+  Mail,
+  ArrowUpRight
 } from "lucide-react";
 import { http } from "@/lib/httpClient";
 import { ApiResp } from "@/lib/types";
@@ -33,7 +40,7 @@ import technologyHero from "@/assets/technology-hero.jpg";
 import procurementHero from "@/assets/procurement-hero.jpg";
 import { resolveSrc } from "@/lib/functions";
 
-// Define SVG patterns as constants to avoid quoting issues
+// Define SVG patterns
 const GRID_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
 
 const LIGHT_GRID_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
@@ -43,25 +50,37 @@ const slides = [
     image: heroMain, 
     title: "Integrated Solutions",
     subtitle: "Sustainable Impact",
-    gradient: "from-navy-dark/90 via-navy/70 to-navy-dark/90"
+    description: "Unified strategies across multiple sectors",
+    gradient: "from-navy-dark/90 via-navy/70 to-navy-dark/90",
+    cta: "Explore Our Approach",
+    color: "gold"
   },
   { 
     image: realEstateHero, 
     title: "Real Estate Excellence",
     subtitle: "Sustainable Communities",
-    gradient: "from-emerald-900/80 via-emerald-800/60 to-emerald-900/80"
+    description: "Crafting premium living experiences",
+    gradient: "from-emerald-900/80 via-emerald-800/60 to-emerald-900/80",
+    cta: "View Projects",
+    color: "emerald"
   },
   { 
     image: healthcareHero, 
     title: "Healthcare Advancement",
     subtitle: "Reliable Technology & Support",
-    gradient: "from-blue-900/80 via-blue-800/60 to-blue-900/80"
+    description: "Advanced medical solutions",
+    gradient: "from-blue-900/80 via-blue-800/60 to-blue-900/80",
+    cta: "Learn More",
+    color: "blue"
   },
   { 
     image: technologyHero, 
     title: "Technology Solutions",
     subtitle: "Secure & Scalable Infrastructure",
-    gradient: "from-purple-900/80 via-purple-800/60 to-purple-900/80"
+    description: "Digital transformation experts",
+    gradient: "from-purple-900/80 via-purple-800/60 to-purple-900/80",
+    cta: "Discover Solutions",
+    color: "purple"
   },
 ];
 
@@ -73,7 +92,9 @@ const services = [
     blurb: "Crafting sustainable communities and premium living experiences.",
     link: "/services/real-estate",
     color: "from-emerald-500 to-emerald-700",
-    features: ["Master Planning", "Sustainable Design", "Community Development"]
+    bgColor: "bg-gradient-to-br from-emerald-400/10 to-emerald-600/5",
+    borderColor: "border-emerald-200",
+    features: ["Master Planning", "Sustainable Design", "Community Development", "Project Management"]
   },
   {
     name: "Healthcare Advancement",
@@ -82,7 +103,9 @@ const services = [
     blurb: "Equipping healthcare facilities with reliable tools, technology and support.",
     link: "/services/healthcare",
     color: "from-blue-500 to-blue-700",
-    features: ["Medical Equipment", "Facility Planning", "Technology Integration"]
+    bgColor: "bg-gradient-to-br from-blue-400/10 to-blue-600/5",
+    borderColor: "border-blue-200",
+    features: ["Medical Equipment", "Facility Planning", "Technology Integration", "Training"]
   },
   {
     name: "Technology Solutions",
@@ -91,7 +114,9 @@ const services = [
     blurb: "Designing secure, scalable digital infrastructure for modern organizations.",
     link: "/services/technology",
     color: "from-purple-500 to-purple-700",
-    features: ["Cybersecurity", "Cloud Infrastructure", "Digital Transformation"]
+    bgColor: "bg-gradient-to-br from-purple-400/10 to-purple-600/5",
+    borderColor: "border-purple-200",
+    features: ["Cybersecurity", "Cloud Infrastructure", "Digital Transformation", "IT Consulting"]
   },
   {
     name: "Strategic Procurement",
@@ -100,38 +125,55 @@ const services = [
     blurb: "Managing sourcing, logistics and supply chains with integrity and precision.",
     link: "/services/procurement",
     color: "from-amber-500 to-amber-700",
-    features: ["Supply Chain Optimization", "Vendor Management", "Logistics"]
+    bgColor: "bg-gradient-to-br from-amber-400/10 to-amber-600/5",
+    borderColor: "border-amber-200",
+    features: ["Supply Chain Optimization", "Vendor Management", "Logistics", "Cost Analysis"]
   },
 ];
 
 const stats = [
-  { value: 6, label: "Years of Excellence", icon: Star, suffix: "+" },
-  { value: 4, label: "Core Business Sectors", icon: Hexagon },
-  { value: 100, label: "Regulatory Compliance", icon: Shield, suffix: "%" },
-  { value: 1, label: "Integrated Partner", icon: Globe, description: "Unified Strategy" },
+  { value: 6, label: "Years of Excellence", icon: Star, suffix: "+", description: "Industry experience" },
+  { value: 4, label: "Core Sectors", icon: Hexagon, description: "Integrated solutions" },
+  { value: 50, label: "Projects Completed", icon: Award, suffix: "+", description: "Successful delivery" },
+  { value: 100, label: "Client Satisfaction", icon: Heart, suffix: "%", description: "Happy clients" },
+  { value: 15, label: "States Covered", icon: MapPin, suffix: "+", description: "Nationwide presence" },
+  { value: 24, label: "Hour Response", icon: Clock, description: "Support time" },
 ];
 
 const valueProps = [
   {
     title: "Integrated Approach",
     description: "Multiple sectors, one cohesive strategy for maximum impact",
-    icon: Sparkles
+    icon: Sparkles,
+    color: "from-purple-500 to-pink-500"
   },
   {
     title: "Proven Results",
     description: "Track record of successful projects across diverse industries",
-    icon: Target
+    icon: Target,
+    color: "from-blue-500 to-cyan-500"
   },
   {
     title: "Operational Excellence",
     description: "Streamlined processes that drive efficiency and value",
-    icon: Zap
+    icon: Zap,
+    color: "from-emerald-500 to-teal-500"
   },
   {
     title: "Strategic Partnership",
     description: "Long-term collaboration focused on your success",
-    icon: Users
+    icon: Users,
+    color: "from-amber-500 to-orange-500"
   }
+];
+
+const partners = [
+  { name: "Ministry of Health", logo: "🏛️" },
+  { name: "Lagos State Govt", logo: "🌆" },
+  { name: "First Bank", logo: "🏦" },
+  { name: "MTN Nigeria", logo: "📱" },
+  { name: "Dangote Group", logo: "🏭" },
+  { name: "Shell Nigeria", logo: "🛢️" },
 ];
 
 function useCountOnView(targetNumber: number, inView: boolean) {
@@ -139,7 +181,7 @@ function useCountOnView(targetNumber: number, inView: boolean) {
   useEffect(() => {
     if (!inView) return;
     let start = 0;
-    const duration = 1200;
+    const duration = 1500;
     const step = Math.max(1, Math.floor((targetNumber / (duration / 16)) || 1));
     const id = setInterval(() => {
       start += step;
@@ -156,56 +198,59 @@ function useCountOnView(targetNumber: number, inView: boolean) {
 }
 
 const heroVariants = {
-  container: { transition: { staggerChildren: 0.12 } },
+  container: { transition: { staggerChildren: 0.15 } },
   title: {
-    hidden: { y: 40, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { duration: 0.7, ease: "easeOut" } },
+    hidden: { y: 60, opacity: 0 },
+    show: { y: 0, opacity: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
   },
   subtitle: {
-    hidden: { y: 24, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { duration: 0.7, delay: 0.1 } },
+    hidden: { y: 40, opacity: 0 },
+    show: { y: 0, opacity: 1, transition: { duration: 0.8, delay: 0.1 } },
+  },
+  description: {
+    hidden: { y: 30, opacity: 0 },
+    show: { y: 0, opacity: 1, transition: { duration: 0.8, delay: 0.2 } },
   },
   cta: {
-    hidden: { y: 16, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { duration: 0.6, delay: 0.2 } },
+    hidden: { y: 20, opacity: 0 },
+    show: { y: 0, opacity: 1, transition: { duration: 0.6, delay: 0.3 } },
   },
 };
 
 const cardVariants = {
-  hidden: { y: 30, opacity: 0 },
+  hidden: { y: 40, opacity: 0, scale: 0.95 },
   show: {
     y: 0,
     opacity: 1,
-    transition: { duration: 0.5, ease: "easeOut" }
+    scale: 1,
+    transition: { duration: 0.6, ease: "easeOut" }
   },
   hover: {
-    y: -8,
+    y: -10,
+    scale: 1.02,
     transition: { duration: 0.3 }
   }
 };
 
 const fadeInUp = {
-  hidden: { y: 40, opacity: 0 },
+  hidden: { y: 50, opacity: 0 },
   show: { 
     y: 0, 
     opacity: 1,
-    transition: { duration: 0.6, ease: "easeOut" }
+    transition: { duration: 0.7, ease: "easeOut" }
   }
 };
 
 const Index: React.FC = () => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
-    Autoplay({ delay: 6000 }),
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 50 }, [
+    Autoplay({ delay: 7000, stopOnInteraction: false }),
   ]);
   const [activeSlide, setActiveSlide] = useState(0);
-  const [testimonialRef] = useEmblaCarousel({ loop: true }, [
-    Autoplay({ delay: 8000 }),
-  ]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [isHoveredService, setIsHoveredService] = useState<number | null>(null);
   const statsRef = useRef<HTMLDivElement | null>(null);
   const controls = useAnimation();
-  const isStatsInView = useInView(statsRef, { threshold: 0.3, once: true });
+  const isStatsInView = useInView(statsRef, { threshold: 0.2, once: true });
   const statValues = stats.map((s) => useCountOnView(s.value, isStatsInView));
 
   useEffect(() => {
@@ -236,113 +281,179 @@ const Index: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-900 antialiased overflow-hidden">
       <Header />
 
       {/* HERO SECTION */}
-      <div className="relative">
-        <div ref={emblaRef} className="h-[85vh] lg:h-[90vh] overflow-hidden">
+      <section className="relative h-screen min-h-[800px] overflow-hidden">
+        <div ref={emblaRef} className="absolute inset-0 overflow-hidden">
           <div className="flex h-full">
             {slides.map((slide, i) => (
-              <div key={i} className="flex-[0_0_100%] relative">
-                <div
-                  className="absolute inset-0 bg-cover bg-center transform-gpu transition-transform duration-1000 scale-110"
+              <div key={i} className="relative flex-[0_0_100%] min-w-0">
+                {/* Background Image with Parallax */}
+                <motion.div
+                  className="absolute inset-0 bg-cover bg-center"
                   style={{ backgroundImage: `url(${slide.image})` }}
+                  animate={{
+                    scale: i === activeSlide ? 1.1 : 1,
+                  }}
+                  transition={{ duration: 20 }}
                 />
+                
+                {/* Gradient Overlay */}
                 <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient}`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                
+                {/* Pattern Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Slide Indicators */}
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        {/* Slide Navigation */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-3 z-20">
           {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => emblaApi?.scrollTo(i)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              className={`relative w-12 h-1.5 rounded-full transition-all duration-500 ${
                 i === activeSlide 
-                  ? "w-8 bg-gold" 
-                  : "bg-white/50 hover:bg-white/80"
+                  ? "bg-gold scale-110" 
+                  : "bg-white/40 hover:bg-white/60"
               }`}
-            />
+            >
+              {i === activeSlide && (
+                <motion.div
+                  className="absolute inset-0 bg-gold rounded-full"
+                  layoutId="activeSlide"
+                  transition={{ type: "spring", duration: 0.5 }}
+                />
+              )}
+            </button>
           ))}
         </div>
 
         {/* Hero Content */}
-        <motion.div
-          initial="hidden"
-          animate="show"
-          variants={heroVariants.container}
-          className="absolute inset-0 flex items-center"
-        >
+        <div className="absolute inset-0 flex items-center">
           <div className="container-custom">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6 border border-white/20">
-                <Sparkles className="w-4 h-4 text-gold" />
-                <span className="text-white/90 text-sm font-medium tracking-wider">
-                  NIGERIA'S MULTI-SECTOR PARTNER
-                </span>
-              </div>
-
-              <motion.h1
-                variants={heroVariants.title}
-                className="text-white font-heading leading-tight text-5xl md:text-7xl lg:text-8xl font-bold"
-              >
-                Integrated
-                <br />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-gold via-accent to-gold-light">
-                  Solutions
-                </span>
-              </motion.h1>
-
-              <motion.p
-                variants={heroVariants.subtitle}
-                className="mt-6 text-xl md:text-2xl text-white/90 max-w-2xl font-light tracking-wide"
-              >
-                Pison-Gold delivers unified Real Estate, Healthcare, Technology 
-                and Procurement strategies that drive sustainable development 
-                and measurable national impact.
-              </motion.p>
-
+            <AnimatePresence mode="wait">
               <motion.div
-                variants={heroVariants.cta}
-                className="mt-10 flex flex-col sm:flex-row gap-4 items-start"
+                key={activeSlide}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
+                transition={{ duration: 0.5 }}
+                className="max-w-3xl"
               >
-                <Link
-                  to="/contact"
-                  className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-gold to-gold-dark text-navy-dark px-8 py-4 rounded-2xl font-semibold text-lg shadow-2xl shadow-gold/30 hover:shadow-gold/50 transition-all duration-300 hover:scale-[1.02]"
+                <motion.div
+                  variants={heroVariants.container}
+                  initial="hidden"
+                  animate="show"
                 >
-                  <span>Start Your Project</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  <div className="absolute inset-0 rounded-2xl border-2 border-gold/30 group-hover:border-gold/50 transition-colors" />
-                </Link>
-                <Link
-                  to="/about"
-                  className="group inline-flex items-center gap-3 border-2 border-white/30 text-white px-8 py-4 rounded-2xl font-medium text-lg backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all duration-300"
-                >
-                  <span>Our Integrated Approach</span>
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
+                  <motion.div
+                    variants={heroVariants.title}
+                    className="inline-flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-lg rounded-full mb-8 border border-white/20"
+                  >
+                    <Sparkles className="w-4 h-4 text-gold" />
+                    <span className="text-white/90 text-sm font-medium tracking-wider uppercase">
+                      Excellence in Action
+                    </span>
+                  </motion.div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <div className="animate-bounce">
-            <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
-              <div className="w-1 h-3 bg-gold rounded-full mt-2 animate-pulse" />
-            </div>
+                  <motion.h1
+                    variants={heroVariants.title}
+                    className="text-white font-heading leading-tight text-5xl md:text-7xl lg:text-8xl font-black"
+                  >
+                    {slides[activeSlide].title}
+                  </motion.h1>
+
+                  <motion.div
+                    variants={heroVariants.subtitle}
+                    className="mt-6"
+                  >
+                    <div className="text-2xl md:text-3xl text-white/90 font-light tracking-wide">
+                      {slides[activeSlide].subtitle}
+                    </div>
+                    <div className="mt-3 text-white/70 text-lg">
+                      {slides[activeSlide].description}
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    variants={heroVariants.cta}
+                    className="mt-12 flex flex-col sm:flex-row gap-4 items-start"
+                  >
+                    <Link
+                      to="/contact"
+                      className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-gold to-gold-dark text-navy-dark px-8 py-4 rounded-2xl font-semibold text-lg shadow-2xl shadow-gold/40 hover:shadow-gold/60 transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                    >
+                      <span>Start Your Project</span>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-gold to-gold-dark opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute inset-0 rounded-2xl border-2 border-gold/30 group-hover:border-gold/50 transition-colors" />
+                    </Link>
+                    
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
-      </div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-gold rounded-full mt-2" />
+          </div>
+        </motion.div>
+      </section>
+
+      {/* PARTNERS SECTION */}
+      <section className="py-16 bg-white border-y border-gray-100">
+        <div className="container-custom">
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className="text-center mb-12"
+          >
+            <h3 className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-4">
+              Trusted By Industry Leaders
+            </h3>
+            <p className="text-gray-400 text-sm max-w-2xl mx-auto">
+              Partnering with organizations that share our commitment to excellence
+            </p>
+          </motion.div>
+
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+            {partners.map((partner, i) => (
+              <motion.div
+                key={partner.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="group flex flex-col items-center"
+              >
+                <div className="text-4xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                  {partner.logo}
+                </div>
+                <div className="text-gray-600 text-sm font-medium group-hover:text-gray-900 transition-colors">
+                  {partner.name}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* VALUE PROPOSITION SECTION */}
-      <section className="py-20 bg-gradient-to-b from-background to-navy-dark/5">
+      <section className="py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="container-custom">
           <motion.div
             initial="hidden"
@@ -351,22 +462,21 @@ const Index: React.FC = () => {
             variants={fadeInUp}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full text-accent font-semibold mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 rounded-full text-gold font-semibold mb-6">
               <Target className="w-4 h-4" />
-              Why Choose Pison-Gold
+              Our Value Proposition
             </div>
             <h2 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              Beyond Traditional
-              <br />
-              <span className="text-gradient-gold">Consulting</span>
+              Why Choose
+              <span className="text-gradient-gold"> Pison-Gold</span>
             </h2>
-            <p className="text-xl text-muted-foreground">
-              We provide integrated solutions that connect sectors, optimize investments, 
-              and deliver sustainable value through strategic partnership.
+            <p className="text-xl text-gray-600 leading-relaxed">
+              We combine deep sector expertise with integrated solutions to deliver 
+              measurable results and sustainable value.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {valueProps.map((prop, i) => {
               const Icon = prop.icon;
               return (
@@ -378,15 +488,22 @@ const Index: React.FC = () => {
                   variants={cardVariants}
                   custom={i}
                   whileHover="hover"
-                  className="group bg-card/50 backdrop-blur-sm p-8 rounded-3xl border border-border/50 hover:border-accent/30 transition-all duration-300"
+                  className="group relative bg-white p-8 rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden"
                 >
-                  <div className="flex flex-col items-start">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-gold-dark flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="w-7 h-7 text-white" />
+                  <div className="relative z-10">
+                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${prop.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold mb-3">{prop.title}</h3>
-                    <p className="text-muted-foreground">{prop.description}</p>
-                    <div className="mt-6 w-12 h-1 bg-gradient-to-r from-accent to-gold-dark rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <h3 className="text-2xl font-bold mb-4">{prop.title}</h3>
+                    <p className="text-gray-600 leading-relaxed">{prop.description}</p>
+                  </div>
+                  
+                  {/* Hover Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  {/* Corner Accent */}
+                  <div className="absolute top-0 right-0 w-24 h-24 overflow-hidden">
+                    <div className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${prop.color} opacity-5 group-hover:opacity-10 transition-opacity duration-500`} />
                   </div>
                 </motion.div>
               );
@@ -396,19 +513,21 @@ const Index: React.FC = () => {
       </section>
 
       {/* STATS SECTION */}
-      <section ref={statsRef} className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-navy-dark via-primary to-navy opacity-90" />
-        <div 
-          className="absolute inset-0"
-          style={{ backgroundImage: GRID_PATTERN }}
-        />
+      <section ref={statsRef} className="py-24 relative overflow-hidden bg-gradient-to-br from-navy-dark via-navy to-navy-dark">
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0"
+            style={{ backgroundImage: GRID_PATTERN }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-navy-dark/80 via-navy/60 to-navy-dark/80" />
+        </div>
         
         <div className="container-custom relative z-10">
           <motion.div
             initial="hidden"
             animate={controls}
             variants={{ show: { transition: { staggerChildren: 0.1 } } }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-8"
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8"
           >
             {stats.map((s, idx) => {
               const Icon = s.icon;
@@ -421,7 +540,7 @@ const Index: React.FC = () => {
                 >
                   <div className="relative inline-flex items-center justify-center w-20 h-20 mb-6">
                     <div className="absolute inset-0 bg-gradient-to-br from-gold/20 to-accent/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500" />
-                    <div className="relative w-16 h-16 bg-gradient-to-br from-accent to-gold-dark rounded-2xl flex items-center justify-center shadow-2xl">
+                    <div className="relative w-16 h-16 bg-gradient-to-br from-gold to-accent rounded-2xl flex items-center justify-center shadow-2xl">
                       <Icon className="w-8 h-8 text-white" />
                     </div>
                   </div>
@@ -443,7 +562,7 @@ const Index: React.FC = () => {
       </section>
 
       {/* SERVICES SECTION */}
-      <section id="services" className="py-24 bg-background">
+      <section id="services" className="py-24 bg-white">
         <div className="container-custom">
           <motion.div
             initial="hidden"
@@ -452,96 +571,91 @@ const Index: React.FC = () => {
             variants={fadeInUp}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <div className="inline-flex items-center gap-3 px-4 py-2 bg-accent/10 rounded-full text-accent font-semibold mb-6">
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-gold/10 rounded-full text-gold font-semibold mb-6">
               <Hexagon className="w-4 h-4" />
-              Our Integrated Ecosystem
+              Our Services
             </div>
             <h2 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              Engineering
-              <span className="text-gradient-gold"> Synergy</span>
-              <br />
-              Across Sectors
+              Integrated
+              <span className="text-gradient-gold"> Solutions</span>
             </h2>
-            <p className="text-xl text-muted-foreground">
-              By aligning multiple sectors under one unified strategy, we help clients 
-              achieve resilient outcomes, optimized investments, and long-term value.
+            <p className="text-xl text-gray-600 leading-relaxed">
+              Comprehensive services designed to meet your unique needs across 
+              multiple sectors with precision and excellence.
             </p>
           </motion.div>
 
           <div className="grid gap-8 md:grid-cols-2">
             {services.map((s, i) => {
               const Icon = s.icon;
+              const isHovered = isHoveredService === i;
               return (
                 <motion.div
                   key={s.name}
                   initial="hidden"
                   whileInView="show"
-                  viewport={{ once: true, margin: "-50px" }}
+                  viewport={{ once: true, margin: "-100px" }}
                   variants={cardVariants}
                   custom={i}
                   whileHover="hover"
                   onHoverStart={() => setIsHoveredService(i)}
                   onHoverEnd={() => setIsHoveredService(null)}
-                  className="group relative overflow-hidden rounded-3xl bg-card border border-border/50 shadow-xl"
+                  className="group relative overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-xl hover:shadow-2xl transition-all duration-500"
                 >
                   <div className="relative h-64 overflow-hidden">
-                    <img
+                    <motion.img
                       src={s.image}
                       alt={s.name}
-                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                      className="w-full h-full object-cover"
+                      animate={{ scale: isHovered ? 1.1 : 1 }}
+                      transition={{ duration: 0.5 }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                    <div className={`absolute inset-0 bg-gradient-to-r ${s.color} opacity-20`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+                    <div className={`absolute inset-0 ${s.bgColor}`} />
                     
-                    {/* Animated Overlay */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent" />
+                    {/* Service Icon */}
+                    <div className={`absolute top-6 left-6 w-14 h-14 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center shadow-2xl`}>
+                      <Icon className="w-7 h-7 text-white" />
                     </div>
                   </div>
 
-                  <div className="p-8 relative">
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center shadow-lg`}>
-                        <Icon className="w-7 h-7 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-heading text-2xl font-bold mb-2">
-                          {s.name}
-                        </h3>
-                        <p className="text-muted-foreground">
-                          {s.blurb}
-                        </p>
-                      </div>
-                    </div>
+                  <div className="p-8">
+                    <h3 className="font-heading text-2xl font-bold mb-4">
+                      {s.name}
+                    </h3>
+                    <p className="text-gray-600 mb-6 leading-relaxed">
+                      {s.blurb}
+                    </p>
 
-                    <div className="mb-6">
+                    <div className="mb-8">
                       <div className="flex flex-wrap gap-2">
                         {s.features.map((feature, idx) => (
-                          <span
+                          <motion.span
                             key={idx}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-secondary/50 rounded-full text-sm"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors"
                           >
-                            <CheckCircle className="w-3 h-3 text-accent" />
+                            <CheckCircle className="w-4 h-4 text-gold" />
                             {feature}
-                          </span>
+                          </motion.span>
                         ))}
                       </div>
                     </div>
 
                     <Link
                       to={s.link}
-                      className="inline-flex items-center gap-2 text-accent font-semibold group/link"
+                      className="group/link inline-flex items-center gap-3 text-gold font-semibold hover:text-gold-dark transition-colors"
                     >
                       <span>Explore Service</span>
-                      <ChevronRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
-                      <div className="w-0 group-hover/link:w-full h-0.5 bg-gradient-to-r from-accent to-gold transition-all duration-300" />
+                      <ArrowUpRight className="w-5 h-5 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
                     </Link>
                   </div>
 
-                  {/* Corner accent */}
-                  <div className="absolute top-0 right-0 w-24 h-24 overflow-hidden">
-                    <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${s.color} opacity-10 group-hover:opacity-20 transition-opacity duration-500`} />
-                  </div>
+                  {/* Hover Border Effect */}
+                  <div className={`absolute inset-0 border-2 ${s.borderColor} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
                 </motion.div>
               );
             })}
@@ -550,9 +664,14 @@ const Index: React.FC = () => {
       </section>
 
       {/* TESTIMONIALS SECTION */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-navy-dark to-navy" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(120,119,198,0.3),transparent_50%)]" />
+      <section className="py-24 relative overflow-hidden bg-gradient-to-br from-gray-900 via-navy-dark to-gray-900">
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 opacity-10"
+            style={{ backgroundImage: GRID_PATTERN }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/90 via-navy-dark/80 to-gray-900/90" />
+        </div>
         
         <div className="container-custom relative z-10">
           <motion.div
@@ -562,89 +681,94 @@ const Index: React.FC = () => {
             variants={fadeInUp}
             className="text-center mb-16"
           >
-            <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white font-semibold mb-6">
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-gold/20 backdrop-blur-sm rounded-full text-gold font-semibold mb-6">
               <Quote className="w-4 h-4" />
-              Trusted Partnerships
+              Client Testimonials
             </div>
             <h2 className="font-heading text-4xl md:text-5xl text-white font-bold mb-6">
-              Leaders Who
-              <span className="text-gradient-gold"> Trust</span>
-              <br />
-              Our Expertise
+              What Our
+              <span className="text-gradient-gold"> Clients</span>
+              Say
             </h2>
-            <p className="text-white/80 text-xl max-w-2xl mx-auto">
-              From private developers to public institutions, we partner with organizations 
-              that demand reliability, transparency, and measurable impact.
+            <p className="text-white/80 text-xl max-w-2xl mx-auto leading-relaxed">
+              Discover why industry leaders trust us with their most important projects.
             </p>
           </motion.div>
 
-          <div ref={testimonialRef} className="overflow-hidden">
-            <div className="flex gap-8">
+          {testimonials.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {testimonials.map((t, i) => (
-                <div
+                <motion.div
                   key={i}
-                  className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_40%] p-4"
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true }}
+                  variants={cardVariants}
+                  custom={i}
+                  whileHover="hover"
+                  className="group bg-white/10 backdrop-blur-lg p-8 rounded-3xl border border-white/20 hover:border-gold/30 transition-all duration-500"
                 >
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    className="bg-card/80 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/10 h-full"
-                  >
-                    <Quote className="w-12 h-12 text-gold/30 mb-6" />
-                    
-                    <blockquote className="text-foreground/90 text-lg italic mb-8 leading-relaxed">
-                      "{(t as any).testimonial}"
-                    </blockquote>
+                  <Quote className="w-12 h-12 text-gold/30 mb-6" />
+                  
+                  <blockquote className="text-white/90 text-lg italic mb-8 leading-relaxed">
+                    "{(t as any).testimonial}"
+                  </blockquote>
 
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <img
-                          src={resolveSrc((t as any).image)}
-                          alt={(t as any).full_name}
-                          className="w-16 h-16 rounded-full object-cover border-2 border-gold/30"
-                        />
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-gold to-accent rounded-full flex items-center justify-center">
-                          <Quote className="w-3 h-3 text-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="font-heading font-bold text-lg">
-                          {(t as any).full_name}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {(t as any).position}
-                          {(t as any).company && (
-                            <span> • {(t as any).company}</span>
-                          )}
-                        </div>
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <img
+                        src={resolveSrc((t as any).image)}
+                        alt={(t as any).full_name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-gold/30"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden w-12 h-12 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center text-white font-bold text-lg">
+                        {(t as any).full_name?.charAt(0) || "C"}
                       </div>
                     </div>
-                  </motion.div>
-                </div>
+                    <div>
+                      <div className="font-heading font-bold text-white">
+                        {(t as any).full_name}
+                      </div>
+                      <div className="text-white/60">
+                        {(t as any).position}
+                      </div>
+                      {(t as any).company && (
+                        <div className="text-gold text-sm font-medium">
+                          {(t as any).company}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
               ))}
             </div>
-          </div>
-
-          {/* Testimonial navigation dots */}
-          <div className="flex justify-center gap-2 mt-12">
-            {testimonials.slice(0, 3).map((_, i) => (
-              <div
-                key={i}
-                className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors cursor-pointer"
-              />
-            ))}
-          </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-12"
+            >
+              <Quote className="w-16 h-16 text-white/20 mx-auto mb-4" />
+              <p className="text-white/60 text-lg">Loading testimonials...</p>
+            </motion.div>
+          )}
         </div>
       </section>
 
       {/* FINAL CTA SECTION */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-navy-dark/5 to-background" />
-        <div 
-          className="absolute inset-0"
-          style={{ backgroundImage: LIGHT_GRID_PATTERN }}
-        />
+      <section className="py-24 relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white">
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: LIGHT_GRID_PATTERN }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-gray-50/90 to-white/90" />
+        </div>
         
         <div className="container-custom text-center relative z-10">
           <motion.div
@@ -652,45 +776,78 @@ const Index: React.FC = () => {
             whileInView="show"
             viewport={{ once: true }}
             variants={fadeInUp}
+            className="max-w-3xl mx-auto"
           >
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-accent/10 to-gold/10 rounded-full mb-8">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-gold/10 to-accent/10 rounded-full mb-8">
               <Sparkles className="w-5 h-5 text-gold" />
-              <span className="font-semibold text-accent">Ready to Build What's Next?</span>
+              <span className="font-semibold text-gold">Ready to Transform Your Business?</span>
             </div>
             
             <h2 className="font-heading text-5xl md:text-6xl font-bold mb-8">
-              Partner with
-              <span className="text-gradient-gold"> Pison-Gold</span>
+              Let's Build
+              <span className="text-gradient-gold"> Together</span>
             </h2>
             
-            <p className="text-2xl text-muted-foreground max-w-3xl mx-auto mb-12 leading-relaxed">
-              For integrated solutions that drive growth, efficiency, and long-term value—across 
-              sectors, from concept to completion.
+            <p className="text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+              Partner with us for integrated solutions that drive growth, efficiency, 
+              and sustainable value across all sectors.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
                 to="/contact"
-                className="group relative inline-flex items-center gap-4 bg-gradient-to-r from-gold to-gold-dark text-navy-dark px-10 py-5 rounded-2xl font-bold text-lg shadow-2xl shadow-gold/40 hover:shadow-gold/60 transition-all duration-300 hover:scale-[1.02]"
+                className="group relative inline-flex items-center gap-4 bg-gradient-to-r from-gold to-gold-dark text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-2xl shadow-gold/40 hover:shadow-gold/60 transition-all duration-300 hover:scale-[1.02] overflow-hidden"
               >
-                <span>Get a Free Consultation</span>
+                <span>Start Your Journey</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                <div className="absolute inset-0 bg-gradient-to-r from-gold-dark to-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute inset-0 rounded-2xl border-2 border-gold/40 group-hover:border-gold/60 transition-colors" />
               </Link>
               
               <Link
                 to="/projects"
-                className="group inline-flex items-center gap-4 border-2 border-border text-foreground px-10 py-5 rounded-2xl font-semibold text-lg hover:border-accent hover:bg-accent/5 transition-all duration-300"
+                className="group inline-flex items-center gap-4 border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl font-semibold text-lg hover:border-gold hover:text-gold hover:bg-gold/5 transition-all duration-300"
               >
-                <span>View Our Projects</span>
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                <span>View Our Work</span>
+                <ArrowUpRight className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </Link>
             </div>
 
-            <p className="mt-10 text-muted-foreground text-sm">
-              Typically respond within 24 hours • No obligation • Tailored solutions
+            <p className="mt-10 text-gray-500 text-sm">
+              <span className="inline-flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-gold" />
+                Free Consultation • No Obligation • Tailored Solutions
+              </span>
             </p>
           </motion.div>
+        </div>
+      </section>
+
+      {/* QUICK CONTACT BANNER */}
+      <section className="py-12 bg-gradient-to-r from-navy-dark via-navy to-navy-dark">
+        <div className="container-custom">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-white">
+              <h3 className="text-2xl font-bold mb-2">Ready to Get Started?</h3>
+              <p className="text-white/80">Contact us today for a free consultation</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a 
+                href="tel:+2341234567890" 
+                className="inline-flex items-center gap-3 bg-white text-navy-dark px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
+              >
+                <Phone className="w-5 h-5" />
+                <span>Call Us</span>
+              </a>
+              <a 
+                href="mailto:info@pison-gold.com" 
+                className="inline-flex items-center gap-3 border-2 border-white text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition-colors"
+              >
+                <Mail className="w-5 h-5" />
+                <span>Email Us</span>
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
