@@ -11,6 +11,9 @@ const ProjectDetails = lazy(() => import("@/pages/auth/ProjectDetails"));
 const Compliance = lazy(() => import("@/pages/auth/Compliance"));
 const Contact = lazy(() => import("@/pages/auth/Contact"));
 const Login = lazy(() => import("@/pages/auth/Login"));
+const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
+
 const OTP = lazy(() => import("@/pages/auth/OTP"));
 const RealEstate = lazy(() => import("@/pages/auth/services/RealEstate"));
 const Healthcare = lazy(() => import("@/pages/auth/services/Healthcare"));
@@ -46,6 +49,9 @@ export default function Routers() {
           <Route path="/compliance" element={<Compliance />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:link1/:link2" element={<ResetPassword />} />
+
           <Route path="/otp" element={<OTP />} />
           <Route path="/services/real-estate" element={<RealEstate />} />
           <Route path="/services/healthcare" element={<Healthcare />} />

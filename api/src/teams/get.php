@@ -19,7 +19,7 @@
             exit;
         }
 
-        $stmt = $conn->prepare("SELECT * FROM teams ORDER BY id DESC");
+        $stmt = $conn->prepare("SELECT * FROM teams ORDER BY id ASC");
         $stmt->execute();
 
         $teams = $stmt->fetchAll(PDO::FETCH_OBJ);

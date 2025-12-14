@@ -248,7 +248,7 @@ const Team = () => {
                         </p>
                         
                         {/* Contact info */}
-                        {/* {(member.email || member.phone) && (
+                        {(member.email || member.phone) && (
                           <div className="space-y-4 pt-8 border-t border-gray-200/50">
                             <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
                               Contact Information
@@ -274,7 +274,7 @@ const Team = () => {
                               )}
                             </div>
                           </div>
-                        )} */}
+                        )}
                       </div>
                     </div>
                   </div>
